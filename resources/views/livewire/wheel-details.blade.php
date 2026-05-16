@@ -113,7 +113,12 @@
         <div class="column column-actions">
             <!-- Feitiços Diários -->
             <div class="section-item-list">
-                <h2 class="magical-header">Feitiços Diários</h2>
+                <div class="magical-header-summary">
+                    <h2 class="magical-header">Feitiços Diários</h2>
+                    @if($dailySpellsXp > 0)
+                        <span class="daily-summary-badge success">+{{ $dailySpellsXp }} XP HOJE</span>
+                    @endif
+                </div>
                 <hr class="magical-separator-section">
                 <div class="items-vertical">
                     @forelse($spells->where('type', 'feitiço diário') as $spell)
@@ -126,7 +131,7 @@
                                 </div>
                                 <div class="card-v3-meta-minimal">
                                     @if($isDone)
-                                        <span class="card-v3-badge danger-badge-glow">Malfeito feito!</span>
+                                        <span class="danger-badge-glow">Malfeito feito!</span>
                                     @else
                                         <div x-data="countdown()" x-init="init()" class="card-v3-timer-minimal">
                                             <span x-text="timeStr">--:--:--</span>
@@ -151,14 +156,23 @@
 
             <!-- Penalidades -->
             <div class="section-item-list">
-                <h2 class="magical-header">Penalidades das Trevas</h2>
+                <div class="magical-header-summary">
+                    <h2 class="magical-header">Penalidades das Trevas</h2>
+                    @if($penaltiesCount > 0)
+                        <span class="daily-summary-badge danger">{{ $penaltiesCount }} SOFRIDAS | {{ $penaltiesDamage }} XP</span>
+                    @endif
+                </div>
                 <hr class="magical-separator-section">
                 <div class="items-vertical">
                     @forelse($spells->where('type', 'penalidade das trevas') as $spell)
+                        @php $countToday = $itemCounts['App\Models\Spell:' . $spell->id] ?? 0; @endphp
                         <div class="item-card-v3 penalty clickable" wire:click="useSpell({{ $spell->id }})">
                             <div class="card-v3-header-row">
                                 <div class="card-v3-title-group">
                                     <span class="card-v3-name-minimal">{{ $spell->name }}</span>
+                                    @if($countToday > 0)
+                                        <span class="card-v3-item-count danger">{{ $countToday }}x</span>
+                                    @endif
                                 </div>
                                 <div class="card-v3-meta-minimal">
                                     <span class="card-v3-xp-minimal danger">-{{ $spell->damage }} XP</span>
@@ -176,14 +190,23 @@
 
             <!-- Missões -->
             <div class="section-item-list">
-                <h2 class="magical-header">Missões de Hogsmead</h2>
+                <div class="magical-header-summary">
+                    <h2 class="magical-header">Missões de Hogsmead</h2>
+                    @if($questsCount > 0)
+                        <span class="daily-summary-badge info">{{ $questsCount }} FEITAS | +{{ $questsGain }} XP</span>
+                    @endif
+                </div>
                 <hr class="magical-separator-section">
                 <div class="items-vertical">
                     @forelse($quests as $quest)
+                        @php $countToday = $itemCounts['App\Models\Quest:' . $quest->id] ?? 0; @endphp
                         <div class="item-card-v3 quest clickable" wire:click="completeQuest({{ $quest->id }})">
                             <div class="card-v3-header-row">
                                 <div class="card-v3-title-group">
                                     <span class="card-v3-name-minimal">{{ $quest->name }}</span>
+                                    @if($countToday > 0)
+                                        <span class="card-v3-item-count info">{{ $countToday }}x</span>
+                                    @endif
                                 </div>
                                 <div class="card-v3-meta-minimal">
                                     <span class="card-v3-xp-minimal info">+{{ $quest->gain }} XP</span>
@@ -211,7 +234,7 @@
                         $canTry = $challenge->level == $wheel->level + 1 && $wheel->xp >= $wheel->xp_required_for_next_level;
                     @endphp
                     <div class="challenge-card-v2 {{ $isCompleted ? 'completed' : ($canTry ? 'unlocked' : 'locked') }}" 
-                         @if($canTry) wire:click="completeChallenge({{ $challenge->id }})" style="cursor: pointer;" @endif>
+                         @if($canTry) wire:click="completeChallenge({{ $challenge->id }})" style="pointer-events: auto; cursor: pointer;" @endif>
                         <div class="challenge-v2-header">
                             <span class="challenge-v2-level">Nível {{ $challenge->level }}</span>
                             <div class="challenge-v2-icon">
@@ -302,7 +325,7 @@
             --card-v3-hover: rgba(255, 255, 255, 0.07);
             --timer-bg: rgba(212, 175, 55, 0.1);
             --xp-text-color: #fef3c7;
-            --danger-badge: #d4af37; /* Em dark mode pode ser ouro ou um vermelho mais vivo */
+            --danger-badge: #d4af37;
         }
 
         .wheel-details-container.full-width { max-width: 1400px; margin: 0 auto; padding: 1rem; }
@@ -330,8 +353,18 @@
         .info-box-integrated { padding: 0; }
         .wheel-description-text { font-family: 'Spectral', serif; font-size: 0.95rem; color: var(--text-secondary); font-style: italic; margin: 0.5rem 0 0 0; line-height: 1.5; }
         .section-item-list { margin-bottom: 2.5rem; }
+        
+        .magical-header-summary { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem; }
         .magical-header { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--text-color); margin: 0; }
-        .magical-separator-section { border: 0; height: 1px; background-image: linear-gradient(to right, var(--gold-color), transparent); margin: 0.4rem 0 1.2rem 0; }
+        .daily-summary-badge { font-family: 'Cinzel', serif; font-size: 0.65rem; font-weight: bold; opacity: 0.8; letter-spacing: 0.5px; }
+        .daily-summary-badge.success { color: #2d5a27; }
+        .daily-summary-badge.danger { color: #741b1b; }
+        .daily-summary-badge.info { color: #1a237e; }
+        [data-theme="dark"] .daily-summary-badge.success { color: #4ade80; }
+        [data-theme="dark"] .daily-summary-badge.danger { color: #f87171; }
+        [data-theme="dark"] .daily-summary-badge.info { color: #60a5fa; }
+
+        .magical-separator-section { border: 0; height: 1px; background-image: linear-gradient(to right, var(--gold-color), transparent); margin: 0.2rem 0 1rem 0; }
         
         .items-vertical { display: flex; flex-direction: column; gap: 0.6rem; }
         .item-card-v3 { 
@@ -348,22 +381,25 @@
         .item-card-v3.done { border-left: 3px solid #2d5a27; opacity: 0.6; }
 
         .card-v3-header-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-        .card-v3-title-group { display: flex; align-items: center; }
+        .card-v3-title-group { display: flex; align-items: center; gap: 0.6rem; }
         .card-v3-name-minimal { font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: 700; color: var(--text-color); letter-spacing: 0.3px; }
         
+        /* Individual Item Count Badge */
+        .card-v3-item-count { font-family: 'Cinzel', serif; font-size: 0.65rem; font-weight: bold; padding: 0.1rem 0.4rem; border-radius: 0.3rem; }
+        .card-v3-item-count.danger { background: rgba(116, 27, 27, 0.08); color: #741b1b; }
+        .card-v3-item-count.info { background: rgba(26, 35, 126, 0.08); color: #1a237e; }
+        [data-theme="dark"] .card-v3-item-count.danger { background: rgba(185, 28, 28, 0.15); color: #f87171; }
+        [data-theme="dark"] .card-v3-item-count.info { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+
         .card-v3-meta-minimal { display: flex; align-items: center; gap: 0.6rem; }
         .card-v3-xp-minimal { display: flex; align-items: center; gap: 0.4rem; font-family: 'Cinzel', serif; font-size: 0.65rem; font-weight: bold; letter-spacing: 0.5px; }
         .xp-gain-val { color: #2d5a27; }
         .xp-sep-val { opacity: 0.4; color: var(--text-color); }
         .xp-damage-val { color: #741b1b; }
         
-        .card-v3-xp-minimal.danger { color: #741b1b; }
-        .card-v3-xp-minimal.info { color: #1a237e; }
-        
         .card-v3-timer-minimal { font-family: 'Cinzel', serif; font-size: 0.65rem; color: #741b1b; font-weight: bold; background: var(--timer-bg); padding: 0.1rem 0.3rem; border-radius: 0.3rem; }
         [data-theme="dark"] .card-v3-timer-minimal { color: var(--gold-color); }
         
-        /* Red Badge for Done items */
         .danger-badge-glow { 
             font-family: 'Cinzel', serif; font-size: 0.65rem; font-weight: bold; 
             color: #fff; background: #741b1b; padding: 0.1rem 0.6rem; 

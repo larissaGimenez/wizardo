@@ -8,8 +8,10 @@ use App\Models\Spell;
 use App\Models\Quest;
 use App\Models\Challenge;
 use App\Models\WheelSpellCompletion;
+use App\Models\WheelActionHistory;
 use Livewire\WithFileUploads;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class WheelDetails extends Component
 {
@@ -54,19 +56,16 @@ class WheelDetails extends Component
 
             $yesterday = Carbon::yesterday();
 
-            // Se a última atividade foi antes de ontem, temos dias perdidos
             if ($startDate->lessThan($yesterday)) {
                 $daysDiff = $startDate->diffInDays($yesterday);
                 $damage = $spell->damage * $daysDiff;
                 $totalDamage += $damage;
                 $missedDaysCount += $daysDiff;
 
-                // Registra que a penalidade foi aplicada até ontem
                 WheelSpellCompletion::updateOrCreate(
                     [
                         'wheel_id' => $this->wheel->id,
                         'spell_id' => $spell->id,
-                        'last_completed_at' => $startDate->toDateString(), // Mantém a última conclusão
                     ],
                     [
                         'last_penalty_applied_at' => $yesterday->toDateString()
@@ -146,18 +145,18 @@ class WheelDetails extends Component
 
     public function useSpell(Spell $spell)
     {
-        // Se for feitiço diário, verifica se já foi feito hoje
         if ($spell->type === 'feitiço diário') {
             if ($this->wheel->isSpellCompletedToday($spell->id)) {
                 session()->flash('error', "Este feitiço já foi realizado hoje!");
                 return;
             }
 
-            // Registra conclusão
             WheelSpellCompletion::updateOrCreate(
                 [
                     'wheel_id' => $this->wheel->id,
                     'spell_id' => $spell->id,
+                ],
+                [
                     'last_completed_at' => Carbon::today()->toDateString(),
                 ]
             );
@@ -167,6 +166,14 @@ class WheelDetails extends Component
         
         $newXp = max(0, min(10000, $this->wheel->xp + $points));
         $this->wheel->update(['xp' => $newXp]);
+
+        // Grava histórico
+        WheelActionHistory::create([
+            'wheel_id' => $this->wheel->id,
+            'actionable_id' => $spell->id,
+            'actionable_type' => Spell::class,
+            'points' => $points,
+        ]);
         
         session()->flash('message', "Feitiço executado! XP: " . ($points > 0 ? "+$points" : "$points"));
     }
@@ -176,6 +183,14 @@ class WheelDetails extends Component
         $points = $quest->gain;
         $newXp = max(0, min(10000, $this->wheel->xp + $points));
         $this->wheel->update(['xp' => $newXp]);
+
+        // Grava histórico
+        WheelActionHistory::create([
+            'wheel_id' => $this->wheel->id,
+            'actionable_id' => $quest->id,
+            'actionable_type' => Quest::class,
+            'points' => $points,
+        ]);
         
         session()->flash('message', "Missão cumprida! +$points XP");
     }
@@ -203,6 +218,7 @@ class WheelDetails extends Component
         $this->wheel->update(['level' => 0, 'xp' => 0]);
         $this->wheel->challenges()->update(['is_completed' => false]);
         WheelSpellCompletion::where('wheel_id', $this->wheel->id)->delete();
+        WheelActionHistory::where('wheel_id', $this->wheel->id)->delete();
 
         session()->flash('message', 'Progresso da roda resetado com sucesso!');
     }
@@ -220,10 +236,42 @@ class WheelDetails extends Component
 
     public function render()
     {
+        // Histórico de hoje
+        $todayHistory = WheelActionHistory::where('wheel_id', $this->wheel->id)
+            ->whereDate('created_at', Carbon::today())
+            ->get();
+
+        // Totais por seção
+        $dailySpellsXpTotal = $todayHistory->where('actionable_type', Spell::class)
+            ->filter(fn($h) => $h->actionable && $h->actionable->type === 'feitiço diário')
+            ->sum('points');
+
+        $penaltiesToday = $todayHistory->where('actionable_type', Spell::class)
+            ->filter(fn($h) => $h->actionable && $h->actionable->type === 'penalidade das trevas');
+        
+        $questsToday = $todayHistory->where('actionable_type', Quest::class);
+
+        // Contagem por item individual (para mostrar nos cards)
+        $itemCounts = WheelActionHistory::where('wheel_id', $this->wheel->id)
+            ->whereDate('created_at', Carbon::today())
+            ->select('actionable_id', 'actionable_type', DB::raw('count(*) as total'))
+            ->groupBy('actionable_id', 'actionable_type')
+            ->get()
+            ->mapWithKeys(function($item) {
+                return [$item->actionable_type . ':' . $item->actionable_id => $item->total];
+            })
+            ->toArray();
+
         return view('livewire.wheel-details', [
             'spells' => $this->wheel->spells()->get(),
             'challenges' => $this->wheel->challenges()->orderBy('level')->get(),
             'quests' => $this->wheel->quests()->get(),
+            'dailySpellsXp' => $dailySpellsXpTotal,
+            'penaltiesCount' => $penaltiesToday->count(),
+            'penaltiesDamage' => $penaltiesToday->sum('points'),
+            'questsCount' => $questsToday->count(),
+            'questsGain' => $questsToday->sum('points'),
+            'itemCounts' => $itemCounts,
         ])->extends('layouts.app')->section('content');
     }
 }
