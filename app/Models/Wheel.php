@@ -4,8 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 class Wheel extends Model
@@ -49,14 +47,6 @@ class Wheel extends Model
     public function completions(): HasMany
     {
         return $this->hasMany(WheelSpellCompletion::class);
-    }
-
-    /**
-     * Get the wheel's image.
-     */
-    public function image(): MorphOne
-    {
-        return $this->morphOne(Image::class, 'imageable');
     }
 
     /**
@@ -132,15 +122,5 @@ class Wheel extends Model
             ->where('spell_id', $spellId)
             ->where('last_completed_at', Carbon::today()->toDateString())
             ->exists();
-    }
-
-    protected static function booted()
-    {
-        static::deleting(function ($wheel) {
-            if ($wheel->image) {
-                Storage::disk('public')->delete($wheel->image->path);
-                $wheel->image->delete();
-            }
-        });
     }
 }

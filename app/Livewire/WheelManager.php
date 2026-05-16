@@ -6,16 +6,12 @@ use Livewire\Component;
 use App\Models\Wheel;
 use App\Models\Spell;
 use Illuminate\Support\Str;
-use Livewire\WithFileUploads;
 
 class WheelManager extends Component
 {
-    use WithFileUploads;
-
     public $wheels;
     public $name;
     public $description;
-    public $image;
     public $selected_spells = [];
     public $editingWheelId;
     public $isEditing = false;
@@ -32,7 +28,7 @@ class WheelManager extends Component
 
     public function loadWheels()
     {
-        $this->wheels = Wheel::with(['spells', 'image'])->get();
+        $this->wheels = Wheel::with(['spells'])->get();
     }
 
     public function selectWheel($id)
@@ -57,13 +53,7 @@ class WheelManager extends Component
         $this->validate([
             'name' => 'required|string|max:255|unique:wheels,name,' . $this->editingWheelId,
             'description' => 'nullable|string|max:500',
-            'image' => 'nullable|image|max:1024',
         ]);
-
-        $imagePath = null;
-        if ($this->image) {
-            $imagePath = $this->image->store('wheels', 'public');
-        }
 
         if ($this->isEditing) {
             $wheel = Wheel::find($this->editingWheelId);
@@ -71,10 +61,6 @@ class WheelManager extends Component
                 'name' => $this->name,
                 'description' => $this->description,
             ]);
-            
-            if ($imagePath) {
-                $wheel->image()->updateOrCreate([], ['path' => $imagePath]);
-            }
             
             // Desassocia os feitiços que foram desmarcados
             $currentSpells = $wheel->spells->pluck('id')->toArray();
@@ -92,10 +78,6 @@ class WheelManager extends Component
                 'name' => $this->name,
                 'description' => $this->description,
             ]);
-            
-            if ($imagePath) {
-                $wheel->image()->create(['path' => $imagePath]);
-            }
             
             // Associa os feitiços selecionados a esta roda
             if (!empty($this->selected_spells)) {
@@ -141,7 +123,6 @@ class WheelManager extends Component
     {
         $this->name = '';
         $this->description = '';
-        $this->image = null;
         $this->selected_spells = [];
         $this->editingWheelId = null;
         $this->isEditing = false;
