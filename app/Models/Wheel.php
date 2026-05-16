@@ -49,12 +49,17 @@ class Wheel extends Model
         return $this->hasMany(WheelSpellCompletion::class);
     }
 
+    public function levelTitles(): HasMany
+    {
+        return $this->hasMany(LevelTitle::class);
+    }
+
     /**
      * Título do nível atual
      */
     public function getLevelTitleAttribute()
     {
-        $titleRecord = LevelTitle::where('level', $this->level)->first();
+        $titleRecord = $this->levelTitles()->where('level', $this->level)->first();
         return $titleRecord ? $titleRecord->title : 'Iniciante';
     }
 
