@@ -14,12 +14,18 @@
         </div>
     @endif
 
-    <div class="breadcrumb">
-        <nav class="magical-breadcrumb">
-            <a href="{{ route('wheel.manager') }}">Rodas</a>
-            <span class="magical-arrow">›</span>
-            <span class="current">Detalhes da Roda</span>
-        </nav>
+    <div class="header-breadcrumb-row">
+        <div class="breadcrumb">
+            <nav class="magical-breadcrumb">
+                <a href="{{ route('wheel.manager') }}">Rodas</a>
+                <span class="magical-arrow">›</span>
+                <span class="current">Detalhes da Roda</span>
+            </nav>
+        </div>
+        
+        <button wire:click="toggleTracker" class="btn-tracker-trigger">
+            📜 Mapa de Atividades
+        </button>
     </div>
 
     <!-- Header com Título e Rank -->
@@ -253,6 +259,99 @@
         </div>
     </div>
 
+    <!-- Habit Tracker Modal -->
+    @if($showTracker)
+    <div class="tracker-overlay" wire:click.self="toggleTracker">
+        <div class="tracker-modal">
+            <div class="tracker-header">
+                <div class="tracker-nav">
+                    <button wire:click="previousMonth" class="tracker-nav-btn">‹</button>
+                    <h2 class="tracker-title">{{ $trackerDateTitle }}</h2>
+                    <button wire:click="nextMonth" class="tracker-nav-btn">›</button>
+                </div>
+                <button wire:click="toggleTracker" class="tracker-close">&times;</button>
+            </div>
+
+            <div class="tracker-body-compact">
+                <div class="tracker-table-container">
+                    <table class="tracker-compact-table">
+                        <thead>
+                            <tr>
+                                <th class="label-col">Atividade</th>
+                                @for($d = 1; $d <= $daysInMonth; $d++)
+                                    <th class="day-col">{{ $d }}</th>
+                                @endfor
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Seção Feitiços -->
+                            <tr class="section-row"><td colspan="{{ $daysInMonth + 1 }}">Feitiços Diários</td></tr>
+                            @foreach($trackerSpells->where('type', 'feitiço diário') as $spell)
+                            <tr>
+                                <td class="label-col">{{ $spell->name }}</td>
+                                @for($d = 1; $d <= $daysInMonth; $d++)
+                                    @php 
+                                        $hasDone = isset($trackerCompletions['App\Models\Spell_' . $spell->id . '_' . $d]);
+                                        $isToday = $trackerMonth == now()->month && $trackerYear == now()->year && $d == now()->day;
+                                    @endphp
+                                    <td class="cell-col {{ $hasDone ? 'done-spell' : '' }} {{ $isToday ? 'is-today' : '' }}">
+                                        @if($hasDone) <div class="mark">✨</div> @endif
+                                    </td>
+                                @endfor
+                            </tr>
+                            @endforeach
+
+                            <!-- Seção Penalidades -->
+                            <tr class="section-row"><td colspan="{{ $daysInMonth + 1 }}">Penalidades das Trevas</td></tr>
+                            @foreach($trackerSpells->where('type', 'penalidade das trevas') as $spell)
+                            <tr>
+                                <td class="label-col">{{ $spell->name }}</td>
+                                @for($d = 1; $d <= $daysInMonth; $d++)
+                                    @php 
+                                        $actions = $trackerCompletions['App\Models\Spell_' . $spell->id . '_' . $d] ?? null;
+                                        $count = $actions ? count($actions) : 0;
+                                        $isToday = $trackerMonth == now()->month && $trackerYear == now()->year && $d == now()->day;
+                                    @endphp
+                                    <td class="cell-col {{ $count > 0 ? 'done-penalty' : '' }} {{ $isToday ? 'is-today' : '' }}">
+                                        @if($count > 0) <span class="count-text">{{ $count }}</span> @endif
+                                    </td>
+                                @endfor
+                            </tr>
+                            @endforeach
+
+                            <!-- Seção Missões -->
+                            <tr class="section-row"><td colspan="{{ $daysInMonth + 1 }}">Missões de Hogsmead</td></tr>
+                            @foreach($trackerQuests as $quest)
+                            <tr>
+                                <td class="label-col">{{ $quest->name }}</td>
+                                @for($d = 1; $d <= $daysInMonth; $d++)
+                                    @php 
+                                        $actions = $trackerCompletions['App\Models\Quest_' . $quest->id . '_' . $d] ?? null;
+                                        $count = $actions ? count($actions) : 0;
+                                        $isToday = $trackerMonth == now()->month && $trackerYear == now()->year && $d == now()->day;
+                                    @endphp
+                                    <td class="cell-col {{ $count > 0 ? 'done-quest' : '' }} {{ $isToday ? 'is-today' : '' }}">
+                                        @if($count > 0) <span class="count-text">{{ $count }}</span> @endif
+                                    </td>
+                                @endfor
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="tracker-footer-compact">
+                <div class="legend-compact">
+                    <span class="legend-item"><span class="box-c spell"></span> Feitiço</span>
+                    <span class="legend-item"><span class="box-c penalty"></span> Penalidade</span>
+                    <span class="legend-item"><span class="box-c quest"></span> Missão</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Rodapé -->
     <div class="danger-zone-footer">
         <hr class="magical-separator">
@@ -329,8 +428,12 @@
         }
 
         .wheel-details-container.full-width { max-width: 1400px; margin: 0 auto; padding: 1rem; }
+        .header-breadcrumb-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .btn-tracker-trigger { background: var(--accent-color); color: white; border: 1px solid var(--gold-color); padding: 0.4rem 1rem; border-radius: 0.5rem; font-family: 'Cinzel', serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn-tracker-trigger:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(116, 27, 27, 0.3); background: var(--accent-hover); }
+
         .toast { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 3000; display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1.2rem; border-radius: 0.8rem; border: 2px solid var(--gold-color); background: var(--card-bg); font-size: 0.9rem; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .magical-breadcrumb { font-family: 'Cinzel', serif; font-size: 0.85rem; display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
+        .magical-breadcrumb { font-family: 'Cinzel', serif; font-size: 0.85rem; display: flex; align-items: center; gap: 0.6rem; }
         .magical-breadcrumb a { color: var(--accent-color); text-decoration: none; }
         .magical-arrow { color: var(--accent-color); font-weight: bold; font-size: 1.1rem; opacity: 0.6; }
         .details-header-main { margin-bottom: 1.5rem; }
@@ -384,7 +487,6 @@
         .card-v3-title-group { display: flex; align-items: center; gap: 0.6rem; }
         .card-v3-name-minimal { font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: 700; color: var(--text-color); letter-spacing: 0.3px; }
         
-        /* Individual Item Count Badge */
         .card-v3-item-count { font-family: 'Cinzel', serif; font-size: 0.65rem; font-weight: bold; padding: 0.1rem 0.4rem; border-radius: 0.3rem; }
         .card-v3-item-count.danger { background: rgba(116, 27, 27, 0.08); color: #741b1b; }
         .card-v3-item-count.info { background: rgba(26, 35, 126, 0.08); color: #1a237e; }
@@ -424,7 +526,48 @@
         .challenge-v2-level { font-family: 'Cinzel', serif; font-size: 0.65rem; color: var(--gold-color); font-weight: bold; }
         .challenge-v2-name { font-weight: 700; font-size: 0.9rem; line-height: 1.2; }
         .challenge-v2-desc { font-family: 'Spectral', serif; font-size: 0.8rem; color: var(--text-secondary); margin: 0; line-height: 1.3; font-style: italic; opacity: 0.8; }
+
+        /* Habit Tracker Compact Styles */
+        .tracker-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 4000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
+        .tracker-modal { background: var(--card-bg); width: 98%; max-width: 1400px; height: 90vh; border-radius: 1.5rem; border: 3px solid var(--gold-color); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 0 60px rgba(0,0,0,0.6); }
+        .tracker-header { padding: 1rem 2rem; border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.03); }
+        .tracker-nav { display: flex; align-items: center; gap: 2rem; }
+        .tracker-nav-btn { background: none; border: 1px solid var(--border-color); color: var(--text-color); font-size: 1.2rem; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .tracker-nav-btn:hover { background: var(--gold-color); color: black; border-color: var(--gold-color); }
+        .tracker-title { font-family: 'Cinzel', serif; font-size: 1.5rem; margin: 0; color: var(--text-color); letter-spacing: 1px; }
+        .tracker-close { background: none; border: none; font-size: 2rem; color: var(--text-color); cursor: pointer; opacity: 0.5; transition: 0.2s; }
+        .tracker-close:hover { opacity: 1; color: var(--accent-color); }
         
+        .tracker-body-compact { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 1rem 2rem; }
+        .tracker-table-container { width: 100%; }
+        .tracker-compact-table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+        .tracker-compact-table th, .tracker-compact-table td { border: 1px solid var(--border-color); font-family: 'Cinzel', serif; height: 30px; text-align: center; }
+        
+        .label-col { width: 180px; text-align: left !important; padding-left: 0.8rem !important; font-size: 0.65rem; font-weight: bold; background: rgba(0,0,0,0.02); }
+        .day-col { width: calc((100% - 180px) / 31); font-size: 0.6rem; background: rgba(0,0,0,0.05); }
+        .cell-col { font-size: 0.6rem; position: relative; background: rgba(255,255,255,0.01); }
+        
+        .section-row { background: rgba(116, 27, 27, 0.05); }
+        .section-row td { font-family: 'Cinzel', serif; font-size: 0.75rem; font-weight: 900; color: var(--accent-color); text-transform: uppercase; letter-spacing: 2px; padding: 0.4rem 1rem; text-align: left !important; }
+        [data-theme="dark"] .section-row { background: rgba(212, 175, 55, 0.05); }
+        [data-theme="dark"] .section-row td { color: var(--gold-color); }
+
+        .done-spell { background: rgba(212, 175, 55, 0.12); }
+        .done-penalty { background: rgba(116, 27, 27, 0.12); }
+        .done-quest { background: rgba(26, 35, 126, 0.12); }
+        
+        .cell-col.is-today { outline: 1px solid var(--accent-color); outline-offset: -1px; background: rgba(116, 27, 27, 0.05); }
+        .mark { font-size: 0.8rem; }
+        .count-text { font-weight: bold; opacity: 0.8; }
+        
+        .tracker-footer-compact { padding: 0.8rem 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; }
+        .legend-compact { display: flex; gap: 1.5rem; }
+        .legend-item { display: flex; align-items: center; gap: 0.4rem; font-family: 'Spectral', serif; font-size: 0.8rem; }
+        .box-c { width: 12px; height: 12px; border: 1px solid var(--border-color); border-radius: 2px; }
+        .box-c.spell { background: rgba(212, 175, 55, 0.3); }
+        .box-c.penalty { background: rgba(116, 27, 27, 0.3); }
+        .box-c.quest { background: rgba(26, 35, 126, 0.3); }
+
         .edit-input-title { font-family: 'Cinzel', serif; font-size: 2.2rem; background: var(--input-bg); border: 1px solid var(--gold-color); color: var(--text-color); width: 100%; border-radius: 0.5rem; padding: 0.2rem 0.5rem; outline: none; }
         .edit-textarea-integrated { font-family: 'Spectral', serif; font-size: 0.95rem; width: 100%; min-height: 100px; background: var(--input-bg); border: 1px solid var(--gold-color); color: var(--text-color); border-radius: 0.5rem; padding: 0.8rem; outline: none; }
         .danger-zone-footer { margin-top: 4rem; padding-bottom: 3rem; }

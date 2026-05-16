@@ -26,11 +26,18 @@ class WheelDetails extends Component
     public $showDeleteModal = false;
     public $fieldToSave = '';
 
+    // Habit Tracker State
+    public $showTracker = false;
+    public $trackerMonth;
+    public $trackerYear;
+
     public function mount(Wheel $wheel)
     {
         $this->wheel = $wheel;
         $this->newName = $wheel->name;
         $this->newDescription = $wheel->description;
+        $this->trackerMonth = now()->month;
+        $this->trackerYear = now()->year;
 
         $this->applyMissedPenalties();
     }
@@ -234,6 +241,26 @@ class WheelDetails extends Component
         return redirect()->route('wheel.manager')->with('message', 'Roda excluída com sucesso!');
     }
 
+    // Tracker Methods
+    public function toggleTracker()
+    {
+        $this->showTracker = !$this->showTracker;
+    }
+
+    public function previousMonth()
+    {
+        $date = Carbon::create($this->trackerYear, $this->trackerMonth, 1)->subMonth();
+        $this->trackerMonth = $date->month;
+        $this->trackerYear = $date->year;
+    }
+
+    public function nextMonth()
+    {
+        $date = Carbon::create($this->trackerYear, $this->trackerMonth, 1)->addMonth();
+        $this->trackerMonth = $date->month;
+        $this->trackerYear = $date->year;
+    }
+
     public function render()
     {
         // Histórico de hoje
@@ -262,6 +289,21 @@ class WheelDetails extends Component
             })
             ->toArray();
 
+        // Data for Habit Tracker
+        $trackerDate = Carbon::create($this->trackerYear, $this->trackerMonth, 1);
+        $daysInMonth = $trackerDate->daysInMonth;
+        
+        $trackerSpells = $this->wheel->spells()->get();
+        $trackerQuests = $this->wheel->quests()->get();
+        
+        $completions = WheelActionHistory::where('wheel_id', $this->wheel->id)
+            ->whereYear('created_at', $this->trackerYear)
+            ->whereMonth('created_at', $this->trackerMonth)
+            ->get()
+            ->groupBy(function($h) {
+                return $h->actionable_type . '_' . $h->actionable_id . '_' . $h->created_at->day;
+            });
+
         return view('livewire.wheel-details', [
             'spells' => $this->wheel->spells()->get(),
             'challenges' => $this->wheel->challenges()->orderBy('level')->get(),
@@ -272,6 +314,12 @@ class WheelDetails extends Component
             'questsCount' => $questsToday->count(),
             'questsGain' => $questsToday->sum('points'),
             'itemCounts' => $itemCounts,
+            // Tracker Data
+            'daysInMonth' => $daysInMonth,
+            'trackerSpells' => $trackerSpells,
+            'trackerQuests' => $trackerQuests,
+            'trackerCompletions' => $completions,
+            'trackerDateTitle' => $trackerDate->translatedFormat('F Y'),
         ])->extends('layouts.app')->section('content');
     }
 }
