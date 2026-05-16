@@ -18,6 +18,7 @@ class Challenge extends Model
         'prize_name',
         'prize_description',
         'wheel_id',
+        'is_completed',
     ];
 
     public function wheel()

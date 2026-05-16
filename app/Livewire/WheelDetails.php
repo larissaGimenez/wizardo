@@ -4,6 +4,9 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Wheel;
+use App\Models\Spell;
+use App\Models\Quest;
+use App\Models\Challenge;
 use Livewire\WithFileUploads;
 
 class WheelDetails extends Component
@@ -17,7 +20,7 @@ class WheelDetails extends Component
     public $isEditingDescription = false;
     public $showConfirmModal = false;
     public $showDeleteModal = false;
-    public $fieldToSave = ''; // 'name' or 'description'
+    public $fieldToSave = '';
 
     public function mount(Wheel $wheel)
     {
@@ -88,6 +91,59 @@ class WheelDetails extends Component
         $this->showConfirmModal = false;
     }
 
+    public function useSpell(Spell $spell)
+    {
+        $points = $spell->gain > 0 ? $spell->gain : -($spell->damage);
+        
+        $newXp = max(0, min(10000, $this->wheel->xp + $points));
+        $this->wheel->update(['xp' => $newXp]);
+        
+        session()->flash('message', "Feitiço executado! XP: " . ($points > 0 ? "+$points" : "$points"));
+    }
+
+    public function completeQuest(Quest $quest)
+    {
+        $points = $quest->gain;
+        $newXp = max(0, min(10000, $this->wheel->xp + $points));
+        $this->wheel->update(['xp' => $newXp]);
+        
+        session()->flash('message', "Missão cumprida! +$points XP");
+    }
+
+    public function completeChallenge(Challenge $challenge)
+    {
+        // Só pode completar o desafio se for o do nível seguinte
+        if ($challenge->level != $this->wheel->level + 1) {
+            session()->flash('error', "Você ainda não pode realizar este desafio!");
+            return;
+        }
+
+        // Só pode completar se tiver a XP necessária
+        if (!$this->wheel->isNextChallengeUnlocked()) {
+            session()->flash('error', "XP insuficiente para este desafio!");
+            return;
+        }
+
+        $challenge->update(['is_completed' => true]);
+        
+        // Sobe de nível
+        $this->wheel->increment('level');
+        
+        session()->flash('message', "PARABÉNS! Você alcançou o Nível " . $this->wheel->level . "!");
+    }
+
+    public function resetProgress()
+    {
+        $this->wheel->update([
+            'level' => 0,
+            'xp' => 0
+        ]);
+
+        $this->wheel->challenges()->update(['is_completed' => false]);
+
+        session()->flash('message', 'Progresso da roda resetado com sucesso!');
+    }
+
     public function confirmDelete()
     {
         $this->showDeleteModal = true;
@@ -103,7 +159,7 @@ class WheelDetails extends Component
     {
         return view('livewire.wheel-details', [
             'spells' => $this->wheel->spells()->get(),
-            'challenges' => $this->wheel->challenges()->get(),
+            'challenges' => $this->wheel->challenges()->orderBy('level')->get(),
             'quests' => $this->wheel->quests()->get(),
         ])->extends('layouts.app')->section('content');
     }
