@@ -415,6 +415,13 @@
             --timer-bg: rgba(116, 27, 27, 0.04);
             --xp-text-color: #1a1a1a;
             --danger-badge: #741b1b;
+            
+            /* Tints from Tracker */
+            --bg-daily: rgba(212, 175, 55, 0.1);
+            --bg-penalty: rgba(116, 27, 27, 0.08);
+            --bg-quest: rgba(26, 35, 126, 0.08);
+            
+            --page-bg-final: var(--card-bg); /* Use the lighter parchment from tracker */
         }
 
         [data-theme="dark"] {
@@ -425,9 +432,37 @@
             --timer-bg: rgba(212, 175, 55, 0.1);
             --xp-text-color: #fef3c7;
             --danger-badge: #d4af37;
+
+            --bg-daily: rgba(212, 175, 55, 0.15);
+            --bg-penalty: rgba(116, 27, 27, 0.15);
+            --bg-quest: rgba(96, 165, 250, 0.12);
+
+            --page-bg-final: var(--card-bg); 
         }
 
-        .wheel-details-container.full-width { max-width: 1400px; margin: 0 auto; padding: 1rem; }
+        /* Set the lighter background for the whole page area */
+        .wheel-details-container.full-width { 
+            max-width: 100% !important; 
+            margin: -2rem !important; 
+            padding: 2rem !important; 
+            background: var(--page-bg-final) !important;
+            min-height: calc(100vh - 60px);
+            position: relative;
+        }
+
+        /* Subtle header overlay to match tracker header style */
+        .header-breadcrumb-row::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 120px; /* Area that covers breadcrumb and title */
+            background: rgba(0, 0, 0, 0.03);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .header-breadcrumb-row, .details-header-main { position: relative; z-index: 1; }
+
         .header-breadcrumb-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
         .btn-tracker-trigger { background: var(--accent-color); color: white; border: 1px solid var(--gold-color); padding: 0.4rem 1rem; border-radius: 0.5rem; font-family: 'Cinzel', serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .btn-tracker-trigger:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(116, 27, 27, 0.3); background: var(--accent-hover); }
@@ -477,11 +512,14 @@
             transition: all 0.2s ease;
             position: relative; overflow: hidden;
         }
-        .item-card-v3.clickable:hover { transform: translateX(5px); background: var(--card-v3-hover); }
-        .item-card-v3.daily { border-left: 3px solid var(--gold-color); }
-        .item-card-v3.penalty { border-left: 3px solid #741b1b; }
-        .item-card-v3.quest { border-left: 3px solid #1a237e; }
-        .item-card-v3.done { border-left: 3px solid #2d5a27; opacity: 0.6; }
+        .item-card-v3.clickable:hover { transform: translateX(5px); opacity: 1; }
+        
+        .item-card-v3.daily { border-left: 3px solid var(--gold-color); background: var(--bg-daily); }
+        .item-card-v3.penalty { border-left: 3px solid #741b1b; background: var(--bg-penalty); }
+        .item-card-v3.quest { border-left: 3px solid #1a237e; background: var(--bg-quest); }
+        .item-card-v3.done { border-left: 3px solid #2d5a27; opacity: 0.6; background: rgba(0,0,0,0.05); }
+
+        .item-card-v3.clickable:hover { filter: brightness(1.1); }
 
         .card-v3-header-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
         .card-v3-title-group { display: flex; align-items: center; gap: 0.6rem; }
