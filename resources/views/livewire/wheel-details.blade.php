@@ -1,4 +1,47 @@
-<div class="wheel-details-container full-width">
+<div class="wheel-details-container full-width" x-data="{ 
+    introActive: false,
+    phrase: '',
+    fullPhrase: '“Eu juro solenemente não fazer nada de bom. . .”',
+    playMaraudersReveal() {
+        this.introActive = true;
+        this.phrase = '';
+        
+        /* Play the real audio file from public/audio/hptheme.m4a */
+        const audio = new Audio('{{ asset('audio/hptheme.m4a') }}');
+        audio.volume = 0.7;
+        audio.play().catch(e => console.error('Audio play failed:', e));
+
+        /* Handwriting Logic */
+        let i = 0;
+        let interval = setInterval(() => {
+            if (i < this.fullPhrase.length) {
+                this.phrase += this.fullPhrase[i];
+                i++;
+            } else {
+                clearInterval(interval);
+                /* Reveal the tracker shortly after the phrase is complete */
+                setTimeout(() => {
+                    $wire.toggleTracker().then(() => {
+                        /* Keep overlay briefly to cover the modal animation start */
+                        setTimeout(() => { this.introActive = false; }, 800);
+                    });
+                }, 1000);
+            }
+        }, 110);
+    }
+}">
+    <!-- Intro Overlay (Marauder's Oath) -->
+    <div class="marauders-intro-overlay" 
+         x-show="introActive" 
+         x-transition:enter="intro-fade-in" 
+         x-transition:leave="intro-fade-out"
+         style="display: none;">
+        <div class="oath-container">
+            <h2 class="oath-text" x-text="phrase"></h2>
+            <div class="ink-stain-effect"></div>
+        </div>
+    </div>
+
     <!-- Flash Messages -->
     @if (session()->has('message'))
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="alert alert-success toast">
@@ -22,10 +65,6 @@
                 <span class="current">Detalhes da Roda</span>
             </nav>
         </div>
-        
-        <button wire:click="toggleTracker" class="btn-tracker-trigger">
-            📜 Mapa de Atividades
-        </button>
     </div>
 
     <!-- Header com Título e Rank -->
@@ -100,7 +139,7 @@
                     </svg>
                 </div>
                 
-                <div class="info-box-integrated">
+                <div class="info-box-integrated centered">
                     <h3 class="section-sub-title">Sobre esta Roda</h3>
                     @if($isEditingDescription)
                         <div class="inline-edit">
@@ -111,6 +150,10 @@
                             {{ $wheel->description ?? 'Clique para adicionar uma descrição...' }}
                         </p>
                     @endif
+
+                    <button @click="playMaraudersReveal()" class="btn-tracker-trigger-centered">
+                        📜 Mapa do Maroto
+                    </button>
                 </div>
             </div>
         </div>
@@ -259,10 +302,10 @@
         </div>
     </div>
 
-    <!-- Habit Tracker Modal -->
+    <!-- Habit Tracker Modal (Mapa do Maroto) -->
     @if($showTracker)
     <div class="tracker-overlay" wire:click.self="toggleTracker">
-        <div class="tracker-modal">
+        <div class="tracker-modal marauders-map-reveal">
             <div class="tracker-header">
                 <div class="tracker-nav">
                     <button wire:click="previousMonth" class="tracker-nav-btn">‹</button>
@@ -421,7 +464,7 @@
             --bg-penalty: rgba(116, 27, 27, 0.08);
             --bg-quest: rgba(26, 35, 126, 0.08);
             
-            --page-bg-final: var(--card-bg); /* Use the lighter parchment from tracker */
+            --page-bg-final: var(--bg-color); /* Uniform parchment matching the header */
         }
 
         [data-theme="dark"] {
@@ -437,10 +480,9 @@
             --bg-penalty: rgba(116, 27, 27, 0.15);
             --bg-quest: rgba(96, 165, 250, 0.12);
 
-            --page-bg-final: var(--card-bg); 
+            --page-bg-final: var(--sidebar-bg); /* Unified dark background */
         }
 
-        /* Set the lighter background for the whole page area */
         .wheel-details-container.full-width { 
             max-width: 100% !important; 
             margin: -2rem !important; 
@@ -450,22 +492,58 @@
             position: relative;
         }
 
-        /* Subtle header overlay to match tracker header style */
+        .marauders-intro-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 1); z-index: 5000;
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(15px);
+        }
+        .oath-container { position: relative; text-align: center; }
+        .oath-text { 
+            font-family: 'Cinzel', serif; font-size: 2.5rem; color: var(--gold-color);
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.8);
+            max-width: 800px; line-height: 1.4;
+            min-height: 4em;
+        }
+        .ink-stain-effect {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 250px; height: 250px; background: radial-gradient(circle, rgba(116, 27, 27, 0.3) 0%, transparent 75%);
+            z-index: -1; animation: inkExpand 3s infinite alternate;
+        }
+        @keyframes inkExpand { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; } 100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0.7; } }
+
+        .intro-fade-in { animation: fadeIn 0.3s ease-out; }
+        .intro-fade-out { animation: fadeOut 0.8s ease-in forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
         .header-breadcrumb-row::before {
             content: "";
             position: absolute;
             top: 0; left: 0; right: 0;
-            height: 120px; /* Area that covers breadcrumb and title */
-            background: rgba(0, 0, 0, 0.03);
+            height: 120px; 
+            background: transparent; /* Removed overlay to keep background uniform */
             pointer-events: none;
             z-index: 0;
         }
 
         .header-breadcrumb-row, .details-header-main { position: relative; z-index: 1; }
-
         .header-breadcrumb-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-        .btn-tracker-trigger { background: var(--accent-color); color: white; border: 1px solid var(--gold-color); padding: 0.4rem 1rem; border-radius: 0.5rem; font-family: 'Cinzel', serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .btn-tracker-trigger:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(116, 27, 27, 0.3); background: var(--accent-hover); }
+        
+        .btn-tracker-trigger-centered { 
+            margin-top: 1.5rem;
+            background: var(--accent-color); color: white; border: 1px solid var(--gold-color); 
+            padding: 0.6rem 1.5rem; border-radius: 2rem; font-family: 'Cinzel', serif; 
+            font-size: 0.8rem; cursor: pointer; transition: all 0.3s; 
+            box-shadow: 0 4px 15px rgba(116, 27, 27, 0.2);
+            text-transform: uppercase; letter-spacing: 1.5px;
+        }
+        .btn-tracker-trigger-centered:hover { 
+            transform: translateY(-3px) scale(1.05); 
+            box-shadow: 0 8px 25px rgba(116, 27, 27, 0.4); 
+            background: var(--accent-hover); 
+            letter-spacing: 2px;
+        }
 
         .toast { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 3000; display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1.2rem; border-radius: 0.8rem; border: 2px solid var(--gold-color); background: var(--card-bg); font-size: 0.9rem; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .magical-breadcrumb { font-family: 'Cinzel', serif; font-size: 0.85rem; display: flex; align-items: center; gap: 0.6rem; }
@@ -488,10 +566,12 @@
         .wheel-segment { transition: all 0.5s ease; cursor: default; }
         .wheel-segment.active { filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.3)); }
         .trophy-icon { filter: drop-shadow(0 0 10px rgba(0,0,0,0.2)); pointer-events: none; }
-        .info-box-integrated { padding: 0; }
-        .wheel-description-text { font-family: 'Spectral', serif; font-size: 0.95rem; color: var(--text-secondary); font-style: italic; margin: 0.5rem 0 0 0; line-height: 1.5; }
-        .section-item-list { margin-bottom: 2.5rem; }
         
+        .info-box-integrated.centered { display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .section-sub-title { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--text-color); margin-bottom: 0.5rem; width: 100%; }
+        .wheel-description-text { font-family: 'Spectral', serif; font-size: 0.95rem; color: var(--text-secondary); font-style: italic; margin: 0.5rem 0 0 0; line-height: 1.5; width: 100%; max-width: 250px; }
+        
+        .section-item-list { margin-bottom: 2.5rem; }
         .magical-header-summary { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem; }
         .magical-header { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--text-color); margin: 0; }
         .daily-summary-badge { font-family: 'Cinzel', serif; font-size: 0.65rem; font-weight: bold; opacity: 0.8; letter-spacing: 0.5px; }
@@ -501,55 +581,32 @@
         [data-theme="dark"] .daily-summary-badge.success { color: #4ade80; }
         [data-theme="dark"] .daily-summary-badge.danger { color: #f87171; }
         [data-theme="dark"] .daily-summary-badge.info { color: #60a5fa; }
-
         .magical-separator-section { border: 0; height: 1px; background-image: linear-gradient(to right, var(--gold-color), transparent); margin: 0.2rem 0 1rem 0; }
-        
         .items-vertical { display: flex; flex-direction: column; gap: 0.6rem; }
-        .item-card-v3 { 
-            background: var(--card-v3-bg); 
-            border: 1px solid var(--border-color);
-            border-radius: 0.8rem; padding: 0.7rem 1.2rem;
-            transition: all 0.2s ease;
-            position: relative; overflow: hidden;
-        }
-        .item-card-v3.clickable:hover { transform: translateX(5px); opacity: 1; }
-        
+        .item-card-v3 { background: var(--card-v3-bg); border: 1px solid var(--border-color); border-radius: 0.8rem; padding: 0.7rem 1.2rem; transition: all 0.2s ease; position: relative; overflow: hidden; }
         .item-card-v3.daily { border-left: 3px solid var(--gold-color); background: var(--bg-daily); }
         .item-card-v3.penalty { border-left: 3px solid #741b1b; background: var(--bg-penalty); }
         .item-card-v3.quest { border-left: 3px solid #1a237e; background: var(--bg-quest); }
         .item-card-v3.done { border-left: 3px solid #2d5a27; opacity: 0.6; background: rgba(0,0,0,0.05); }
-
-        .item-card-v3.clickable:hover { filter: brightness(1.1); }
-
+        .item-card-v3.clickable:hover { transform: translateX(5px); filter: brightness(1.1); }
         .card-v3-header-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
         .card-v3-title-group { display: flex; align-items: center; gap: 0.6rem; }
         .card-v3-name-minimal { font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: 700; color: var(--text-color); letter-spacing: 0.3px; }
-        
         .card-v3-item-count { font-family: 'Cinzel', serif; font-size: 0.65rem; font-weight: bold; padding: 0.1rem 0.4rem; border-radius: 0.3rem; }
         .card-v3-item-count.danger { background: rgba(116, 27, 27, 0.08); color: #741b1b; }
         .card-v3-item-count.info { background: rgba(26, 35, 126, 0.08); color: #1a237e; }
         [data-theme="dark"] .card-v3-item-count.danger { background: rgba(185, 28, 28, 0.15); color: #f87171; }
         [data-theme="dark"] .card-v3-item-count.info { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
-
         .card-v3-meta-minimal { display: flex; align-items: center; gap: 0.6rem; }
         .card-v3-xp-minimal { display: flex; align-items: center; gap: 0.4rem; font-family: 'Cinzel', serif; font-size: 0.65rem; font-weight: bold; letter-spacing: 0.5px; }
         .xp-gain-val { color: #2d5a27; }
         .xp-sep-val { opacity: 0.4; color: var(--text-color); }
         .xp-damage-val { color: #741b1b; }
-        
         .card-v3-timer-minimal { font-family: 'Cinzel', serif; font-size: 0.65rem; color: #741b1b; font-weight: bold; background: var(--timer-bg); padding: 0.1rem 0.3rem; border-radius: 0.3rem; }
         [data-theme="dark"] .card-v3-timer-minimal { color: var(--gold-color); }
-        
-        .danger-badge-glow { 
-            font-family: 'Cinzel', serif; font-size: 0.65rem; font-weight: bold; 
-            color: #fff; background: #741b1b; padding: 0.1rem 0.6rem; 
-            border-radius: 2rem; box-shadow: 0 0 10px rgba(116, 27, 27, 0.3);
-            letter-spacing: 0.5px;
-        }
+        .danger-badge-glow { font-family: 'Cinzel', serif; font-size: 0.65rem; font-weight: bold; color: #fff; background: #741b1b; padding: 0.1rem 0.6rem; border-radius: 2rem; box-shadow: 0 0 10px rgba(116, 27, 27, 0.3); letter-spacing: 0.5px; }
         [data-theme="dark"] .danger-badge-glow { background: #b91c1c; box-shadow: 0 0 10px rgba(185, 28, 28, 0.5); }
-
         .card-v3-desc-subtitle { font-family: 'Spectral', serif; font-size: 0.75rem; color: var(--text-secondary); margin: 0.1rem 0 0 0; font-style: italic; opacity: 0.7; line-height: 1.2; }
-
         .header-challenges-v2 { color: var(--accent-color); }
         .magical-separator-challenges { border: 0; height: 2px; background: linear-gradient(to right, transparent, var(--gold-color), transparent); margin: 0.6rem 0 1.5rem 0; opacity: 0.6; }
         .challenges-vertical-list { display: flex; flex-direction: column; gap: 1rem; }
@@ -565,7 +622,31 @@
         .challenge-v2-name { font-weight: 700; font-size: 0.9rem; line-height: 1.2; }
         .challenge-v2-desc { font-family: 'Spectral', serif; font-size: 0.8rem; color: var(--text-secondary); margin: 0; line-height: 1.3; font-style: italic; opacity: 0.8; }
 
-        /* Habit Tracker Compact Styles */
+        .marauders-map-reveal {
+            animation: maraudersReveal 1.2s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+            transform-origin: center;
+        }
+
+        @keyframes maraudersReveal {
+            0% { 
+                opacity: 0; 
+                clip-path: circle(0% at 50% 50%); 
+                filter: blur(10px) sepia(1) brightness(0.5);
+                transform: scale(0.8) translateY(20px);
+            }
+            40% {
+                opacity: 0.6;
+                clip-path: circle(30% at 50% 50%);
+                filter: blur(5px) sepia(0.5) brightness(0.8);
+            }
+            100% { 
+                opacity: 1; 
+                clip-path: circle(150% at 50% 50%); 
+                filter: blur(0px) sepia(0) brightness(1);
+                transform: scale(1) translateY(0);
+            }
+        }
+
         .tracker-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 4000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
         .tracker-modal { background: var(--card-bg); width: 98%; max-width: 1400px; height: 90vh; border-radius: 1.5rem; border: 3px solid var(--gold-color); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 0 60px rgba(0,0,0,0.6); }
         .tracker-header { padding: 1rem 2rem; border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.03); }
@@ -575,29 +656,23 @@
         .tracker-title { font-family: 'Cinzel', serif; font-size: 1.5rem; margin: 0; color: var(--text-color); letter-spacing: 1px; }
         .tracker-close { background: none; border: none; font-size: 2rem; color: var(--text-color); cursor: pointer; opacity: 0.5; transition: 0.2s; }
         .tracker-close:hover { opacity: 1; color: var(--accent-color); }
-        
         .tracker-body-compact { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 1rem 2rem; }
         .tracker-table-container { width: 100%; }
         .tracker-compact-table { border-collapse: collapse; width: 100%; table-layout: fixed; }
         .tracker-compact-table th, .tracker-compact-table td { border: 1px solid var(--border-color); font-family: 'Cinzel', serif; height: 30px; text-align: center; }
-        
         .label-col { width: 180px; text-align: left !important; padding-left: 0.8rem !important; font-size: 0.65rem; font-weight: bold; background: rgba(0,0,0,0.02); }
         .day-col { width: calc((100% - 180px) / 31); font-size: 0.6rem; background: rgba(0,0,0,0.05); }
         .cell-col { font-size: 0.6rem; position: relative; background: rgba(255,255,255,0.01); }
-        
         .section-row { background: rgba(116, 27, 27, 0.05); }
         .section-row td { font-family: 'Cinzel', serif; font-size: 0.75rem; font-weight: 900; color: var(--accent-color); text-transform: uppercase; letter-spacing: 2px; padding: 0.4rem 1rem; text-align: left !important; }
         [data-theme="dark"] .section-row { background: rgba(212, 175, 55, 0.05); }
         [data-theme="dark"] .section-row td { color: var(--gold-color); }
-
         .done-spell { background: rgba(212, 175, 55, 0.12); }
         .done-penalty { background: rgba(116, 27, 27, 0.12); }
         .done-quest { background: rgba(26, 35, 126, 0.12); }
-        
         .cell-col.is-today { outline: 1px solid var(--accent-color); outline-offset: -1px; background: rgba(116, 27, 27, 0.05); }
         .mark { font-size: 0.8rem; }
         .count-text { font-weight: bold; opacity: 0.8; }
-        
         .tracker-footer-compact { padding: 0.8rem 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; }
         .legend-compact { display: flex; gap: 1.5rem; }
         .legend-item { display: flex; align-items: center; gap: 0.4rem; font-family: 'Spectral', serif; font-size: 0.8rem; }

@@ -59,6 +59,35 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
+        /* Custom Scrollbar - Magical Theme */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+            border-left: 1px solid var(--border-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 10px;
+            border: 3px solid var(--bg-color);
+            transition: all 0.3s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-hover);
+            border-width: 2px;
+        }
+
+        /* Firefox support */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-color) var(--bg-color);
+        }
+
         h1, h2, h3, h4, h5, h6, .logo, .nav-item .label {
             font-family: 'Cinzel', serif;
             letter-spacing: 0.05em;
