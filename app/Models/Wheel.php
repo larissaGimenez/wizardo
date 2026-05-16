@@ -24,6 +24,11 @@ class Wheel extends Model
         return $this->hasMany(Challenge::class);
     }
 
+    public function quests(): HasMany
+    {
+        return $this->hasMany(Quest::class);
+    }
+
     /**
      * Get the wheel's image.
      */

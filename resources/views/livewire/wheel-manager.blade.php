@@ -16,30 +16,28 @@
     <!-- Grid de Cards -->
     <div class="wheels-grid">
         @forelse ($wheels as $wheel)
-            <div class="wheel-card {{ $selectedWheelId == $wheel->id ? 'selected' : '' }}">
-                <!-- Imagem da Roda -->
-                <div class="wheel-image-container" wire:click="selectWheel({{ $wheel->id }})">
-                    @if($wheel->image)
-                        <img src="{{ asset('storage/' . $wheel->image->path) }}" alt="{{ $wheel->name }}" class="wheel-image">
-                    @else
-                        <div class="wheel-image-placeholder">
-                            <span class="icon">🎡</span>
-                        </div>
-                    @endif
-                </div>
+            <a href="{{ route('wheel.details', $wheel->id) }}" class="wheel-card-link">
+                <div class="wheel-card {{ $selectedWheelId == $wheel->id ? 'selected' : '' }}">
+                    <!-- Imagem da Roda -->
+                    <div class="wheel-image-container">
+                        @if($wheel->image)
+                            <img src="{{ asset('storage/' . $wheel->image->path) }}" alt="{{ $wheel->name }}" class="wheel-image">
+                        @else
+                            <div class="wheel-image-placeholder">
+                                <span class="icon">🎡</span>
+                            </div>
+                        @endif
+                    </div>
 
-                <div class="card-content" wire:click="selectWheel({{ $wheel->id }})">
-                    <h3 class="wheel-name">{{ $wheel->name }}</h3>
-                    <p class="wheel-desc">{{ Illuminate\Support\Str::limit($wheel->description, 60) }}</p>
-                    <div class="wheel-meta">
-                        <span class="spell-count">✨ {{ $wheel->spells->count() }} Feitiços</span>
+                    <div class="card-content">
+                        <h3 class="wheel-name">{{ $wheel->name }}</h3>
+                        <p class="wheel-desc">{{ Illuminate\Support\Str::limit($wheel->description, 60) }}</p>
+                        <div class="wheel-meta">
+                            <span class="spell-count">✨ {{ $wheel->spells->count() }} Feitiços</span>
+                        </div>
                     </div>
                 </div>
-                <div class="card-actions">
-                    <button wire:click="edit({{ $wheel->id }})" class="btn-action" title="Editar">✏️ Editar</button>
-                    <button wire:click="delete({{ $wheel->id }})" wire:confirm="Tem certeza que deseja excluir esta roda?" class="btn-action delete" title="Excluir">🗑️ Excluir</button>
-                </div>
-            </div>
+            </a>
         @empty
             <div class="empty-state">
                 <div class="empty-icon">📭</div>
@@ -159,6 +157,12 @@
             transform: translateY(-4px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             border-color: #cbd5e1;
+        }
+
+        .wheel-card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
         }
 
         .wheel-card.selected {
