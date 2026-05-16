@@ -7,7 +7,9 @@ use App\Models\Wheel;
 use App\Models\Spell;
 use App\Models\Quest;
 use App\Models\Challenge;
+use App\Models\WheelSpellCompletion;
 use Livewire\WithFileUploads;
+use Carbon\Carbon;
 
 class WheelDetails extends Component
 {
@@ -27,6 +29,57 @@ class WheelDetails extends Component
         $this->wheel = $wheel;
         $this->newName = $wheel->name;
         $this->newDescription = $wheel->description;
+
+        $this->applyMissedPenalties();
+    }
+
+    /**
+     * Aplica penalidades automáticas para feitiços diários não concluídos em dias anteriores
+     */
+    protected function applyMissedPenalties()
+    {
+        $dailySpells = $this->wheel->spells()->where('type', 'feitiço diário')->get();
+        $totalDamage = 0;
+        $missedDaysCount = 0;
+
+        foreach ($dailySpells as $spell) {
+            $lastActivity = WheelSpellCompletion::where('wheel_id', $this->wheel->id)
+                ->where('spell_id', $spell->id)
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            $startDate = $lastActivity 
+                ? Carbon::parse(max($lastActivity->last_completed_at, $lastActivity->last_penalty_applied_at))
+                : $this->wheel->created_at->startOfDay();
+
+            $yesterday = Carbon::yesterday();
+
+            // Se a última atividade foi antes de ontem, temos dias perdidos
+            if ($startDate->lessThan($yesterday)) {
+                $daysDiff = $startDate->diffInDays($yesterday);
+                $damage = $spell->damage * $daysDiff;
+                $totalDamage += $damage;
+                $missedDaysCount += $daysDiff;
+
+                // Registra que a penalidade foi aplicada até ontem
+                WheelSpellCompletion::updateOrCreate(
+                    [
+                        'wheel_id' => $this->wheel->id,
+                        'spell_id' => $spell->id,
+                        'last_completed_at' => $startDate->toDateString(), // Mantém a última conclusão
+                    ],
+                    [
+                        'last_penalty_applied_at' => $yesterday->toDateString()
+                    ]
+                );
+            }
+        }
+
+        if ($totalDamage > 0) {
+            $newXp = max(0, $this->wheel->xp - $totalDamage);
+            $this->wheel->update(['xp' => $newXp]);
+            session()->flash('error', "⚡ Você esqueceu de seus feitiços! Penalidade de -$totalDamage XP aplicada por $missedDaysCount dia(s) perdido(s).");
+        }
     }
 
     public function startEditingName()
@@ -93,6 +146,23 @@ class WheelDetails extends Component
 
     public function useSpell(Spell $spell)
     {
+        // Se for feitiço diário, verifica se já foi feito hoje
+        if ($spell->type === 'feitiço diário') {
+            if ($this->wheel->isSpellCompletedToday($spell->id)) {
+                session()->flash('error', "Este feitiço já foi realizado hoje!");
+                return;
+            }
+
+            // Registra conclusão
+            WheelSpellCompletion::updateOrCreate(
+                [
+                    'wheel_id' => $this->wheel->id,
+                    'spell_id' => $spell->id,
+                    'last_completed_at' => Carbon::today()->toDateString(),
+                ]
+            );
+        }
+
         $points = $spell->gain > 0 ? $spell->gain : -($spell->damage);
         
         $newXp = max(0, min(10000, $this->wheel->xp + $points));
@@ -112,21 +182,17 @@ class WheelDetails extends Component
 
     public function completeChallenge(Challenge $challenge)
     {
-        // Só pode completar o desafio se for o do nível seguinte
         if ($challenge->level != $this->wheel->level + 1) {
             session()->flash('error', "Você ainda não pode realizar este desafio!");
             return;
         }
 
-        // Só pode completar se tiver a XP necessária
         if (!$this->wheel->isNextChallengeUnlocked()) {
             session()->flash('error', "XP insuficiente para este desafio!");
             return;
         }
 
         $challenge->update(['is_completed' => true]);
-        
-        // Sobe de nível
         $this->wheel->increment('level');
         
         session()->flash('message', "PARABÉNS! Você alcançou o Nível " . $this->wheel->level . "!");
@@ -134,12 +200,9 @@ class WheelDetails extends Component
 
     public function resetProgress()
     {
-        $this->wheel->update([
-            'level' => 0,
-            'xp' => 0
-        ]);
-
+        $this->wheel->update(['level' => 0, 'xp' => 0]);
         $this->wheel->challenges()->update(['is_completed' => false]);
+        WheelSpellCompletion::where('wheel_id', $this->wheel->id)->delete();
 
         session()->flash('message', 'Progresso da roda resetado com sucesso!');
     }

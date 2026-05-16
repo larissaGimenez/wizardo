@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class Wheel extends Model
 {
@@ -43,6 +44,11 @@ class Wheel extends Model
     public function quests(): HasMany
     {
         return $this->hasMany(Quest::class);
+    }
+
+    public function completions(): HasMany
+    {
+        return $this->hasMany(WheelSpellCompletion::class);
     }
 
     /**
@@ -115,6 +121,17 @@ class Wheel extends Model
         if ($xpNeededForNext <= 0) return 0;
 
         return min(100, max(0, ($xpInCurrentLevel / $xpNeededForNext) * 100));
+    }
+
+    /**
+     * Check if a spell is completed today
+     */
+    public function isSpellCompletedToday($spellId)
+    {
+        return $this->completions()
+            ->where('spell_id', $spellId)
+            ->where('last_completed_at', Carbon::today()->toDateString())
+            ->exists();
     }
 
     protected static function booted()

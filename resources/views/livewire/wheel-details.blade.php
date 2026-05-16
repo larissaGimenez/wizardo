@@ -58,13 +58,11 @@
         @endif
     </div>
 
-    <!-- Layout de 3 Colunas Integrado -->
     <div class="details-three-columns-grid">
         
         <!-- Coluna 1: Gráfico de Progresso e Descrição -->
         <div class="column column-visual">
             <div class="integrated-visual-section">
-                <!-- Gráfico Circular de Níveis -->
                 <div class="magical-wheel-chart-integrated">
                     <svg viewBox="0 0 100 100" class="magical-wheel-svg">
                         @php
@@ -80,9 +78,7 @@
                                 $isActive = $levelNum <= $wheel->level;
                                 $startAngle = $i * 36;
                                 $endAngle = ($i + 1) * 36 - 4;
-                                
                                 $r1 = 35; $r2 = 48;
-                                
                                 $x1 = 50 + $r1 * cos(deg2rad($startAngle - 90)); $y1 = 50 + $r1 * sin(deg2rad($startAngle - 90));
                                 $x2 = 50 + $r2 * cos(deg2rad($startAngle - 90)); $y2 = 50 + $r2 * sin(deg2rad($startAngle - 90));
                                 $x3 = 50 + $r2 * cos(deg2rad($endAngle - 90)); $y3 = 50 + $r2 * sin(deg2rad($endAngle - 90));
@@ -115,18 +111,32 @@
 
         <!-- Coluna 2: Feitiços e Missões -->
         <div class="column column-actions">
+            <!-- Feitiços Diários -->
             <div class="section-item-list">
                 <h2 class="magical-header">Feitiços Diários</h2>
                 <hr class="magical-separator-section">
                 <div class="items-vertical">
                     @forelse($spells->where('type', 'feitiço diário') as $spell)
-                        <div class="item-card success clickable" wire:click="useSpell({{ $spell->id }})">
-                            <div class="item-card-header">
-                                <span class="item-name">✨ {{ $spell->name }}</span>
-                                <span class="item-badge success">+{{ $spell->gain }} XP</span>
+                        @php $isDone = $wheel->isSpellCompletedToday($spell->id); @endphp
+                        <div class="item-card-v3 {{ $isDone ? 'done' : 'daily' }} clickable" 
+                             @if(!$isDone) wire:click="useSpell({{ $spell->id }})" @endif>
+                            <div class="card-v3-header-row">
+                                <div class="card-v3-title-group">
+                                    <span class="card-v3-name-minimal">{{ $spell->name }}</span>
+                                </div>
+                                <div class="card-v3-meta-minimal">
+                                    @if($isDone)
+                                        <span class="card-v3-status-minimal">✅ Concluído</span>
+                                    @else
+                                        <div x-data="countdown()" x-init="init()" class="card-v3-timer-minimal">
+                                            <span x-text="timeStr">--:--:--</span>
+                                        </div>
+                                        <span class="card-v3-xp-minimal">+{{ $spell->gain }} | -{{ $spell->damage }}</span>
+                                    @endif
+                                </div>
                             </div>
-                            @if($spell->description)
-                                <p class="item-desc">{{ $spell->description }}</p>
+                            @if($spell->action)
+                                <p class="card-v3-desc-subtitle">{{ $spell->action }}</p>
                             @endif
                         </div>
                     @empty
@@ -135,18 +145,23 @@
                 </div>
             </div>
 
+            <!-- Penalidades -->
             <div class="section-item-list">
                 <h2 class="magical-header">Penalidades das Trevas</h2>
                 <hr class="magical-separator-section">
                 <div class="items-vertical">
                     @forelse($spells->where('type', 'penalidade das trevas') as $spell)
-                        <div class="item-card danger clickable" wire:click="useSpell({{ $spell->id }})">
-                            <div class="item-card-header">
-                                <span class="item-name">🐍 {{ $spell->name }}</span>
-                                <span class="item-badge danger">-{{ $spell->damage }} XP</span>
+                        <div class="item-card-v3 penalty clickable" wire:click="useSpell({{ $spell->id }})">
+                            <div class="card-v3-header-row">
+                                <div class="card-v3-title-group">
+                                    <span class="card-v3-name-minimal">{{ $spell->name }}</span>
+                                </div>
+                                <div class="card-v3-meta-minimal">
+                                    <span class="card-v3-xp-minimal danger">-{{ $spell->damage }} XP</span>
+                                </div>
                             </div>
-                            @if($spell->description)
-                                <p class="item-desc">{{ $spell->description }}</p>
+                            @if($spell->action)
+                                <p class="card-v3-desc-subtitle">{{ $spell->action }}</p>
                             @endif
                         </div>
                     @empty
@@ -155,18 +170,23 @@
                 </div>
             </div>
 
+            <!-- Missões -->
             <div class="section-item-list">
                 <h2 class="magical-header">Missões de Hogsmead</h2>
                 <hr class="magical-separator-section">
                 <div class="items-vertical">
                     @forelse($quests as $quest)
-                        <div class="item-card info clickable" wire:click="completeQuest({{ $quest->id }})">
-                            <div class="item-card-header">
-                                <span class="item-name">🏆 {{ $quest->name }}</span>
-                                <span class="item-badge info">+{{ $quest->gain }} XP</span>
+                        <div class="item-card-v3 quest clickable" wire:click="completeQuest({{ $quest->id }})">
+                            <div class="card-v3-header-row">
+                                <div class="card-v3-title-group">
+                                    <span class="card-v3-name-minimal">{{ $quest->name }}</span>
+                                </div>
+                                <div class="card-v3-meta-minimal">
+                                    <span class="card-v3-xp-minimal info">+{{ $quest->gain }} XP</span>
+                                </div>
                             </div>
                             @if($quest->description)
-                                <p class="item-desc">{{ $quest->description }}</p>
+                                <p class="card-v3-desc-subtitle">{{ $quest->description }}</p>
                             @endif
                         </div>
                     @empty
@@ -219,155 +239,140 @@
         </div>
     </div>
 
-    <!-- Modais (Restaurados) -->
-    @if($showConfirmModal)
-        <div class="modal-backdrop" wire:click="cancelEditing">
-            <div class="modal-content confirm-modal" wire:click.stop>
-                <div class="modal-header-magic">
-                    <h2>✨ Selar Alteração?</h2>
-                </div>
-                <div class="modal-body text-center">
-                    <p>Deseja confirmar as mudanças em <strong>"{{ $wheel->name }}"</strong>?</p>
-                    <div class="modal-magic-actions">
-                        <button wire:click="save" class="btn-magic-primary">Confirmar</button>
-                        <button wire:click="cancelEditing" class="btn-magic-secondary">Descartar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
+    <!-- Modais Refatorados -->
+    <x-magical-modal 
+        show="showConfirmModal" 
+        title="✨ Selar Alteração?" 
+        description="Deseja confirmar as mudanças em <strong>'{{ $wheel->name }}'</strong>?" 
+        confirmAction="save" 
+        cancelAction="cancelEditing"
+        type="primary"
+    />
 
-    @if($showDeleteModal)
-        <div class="modal-backdrop" wire:click="cancelEditing">
-            <div class="modal-content confirm-modal" wire:click.stop>
-                <div class="modal-header-magic danger">
-                    <h2>🔥 Banir Roda?</h2>
-                </div>
-                <div class="modal-body text-center">
-                    <p>Tem certeza que deseja excluir permanentemente a roda <strong>"{{ $wheel->name }}"</strong>?</p>
-                    <div class="modal-magic-actions">
-                        <button wire:click="delete" class="btn-magic-danger">Banir Roda</button>
-                        <button wire:click="cancelEditing" class="btn-magic-secondary">Cancelar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
+    <x-magical-modal 
+        show="showDeleteModal" 
+        title="🔥 Banir Roda?" 
+        description="Tem certeza que deseja excluir permanentemente a roda <strong>'{{ $wheel->name }}'</strong>?" 
+        confirmAction="delete" 
+        cancelAction="cancelEditing"
+        type="danger"
+    />
+
+    <script>
+        function countdown() {
+            return {
+                timeStr: '00:00:00',
+                init() {
+                    this.update();
+                    setInterval(() => this.update(), 1000);
+                },
+                update() {
+                    const now = new Date();
+                    const midnight = new Date(now);
+                    midnight.setHours(24, 0, 0, 0);
+                    const diff = midnight - now;
+                    if (diff <= 0) { this.timeStr = '00:00:00'; return; }
+                    const hours = Math.floor(diff / 3600000);
+                    const mins = Math.floor((diff % 3600000) / 60000);
+                    const secs = Math.floor((diff % 60000) / 1000);
+                    this.timeStr = [hours, mins, secs].map(v => v.toString().padStart(2, '0')).join(':');
+                }
+            }
+        }
+    </script>
 
     <style>
         .wheel-details-container.full-width { max-width: 1400px; margin: 0 auto; padding: 1rem; }
-        
-        .toast { 
-            position: fixed; top: 1.5rem; right: 1.5rem; z-index: 3000; 
-            display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1.2rem; 
-            border-radius: 0.8rem; border: 2px solid var(--gold-color); 
-            background: var(--card-bg); font-size: 0.9rem; box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
-        }
-
+        .toast { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 3000; display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1.2rem; border-radius: 0.8rem; border: 2px solid var(--gold-color); background: var(--card-bg); font-size: 0.9rem; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .magical-breadcrumb { font-family: 'Cinzel', serif; font-size: 0.85rem; display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
         .magical-breadcrumb a { color: var(--accent-color); text-decoration: none; }
         .magical-arrow { color: #741b1b; font-weight: bold; font-size: 1.1rem; }
-
         .details-header-main { margin-bottom: 1.5rem; }
         .header-flex-wrapper { display: flex; align-items: center; gap: 1.5rem; }
         .level-badge-pill { background: var(--gold-color); color: #000; display: flex; align-items: center; border-radius: 2rem; overflow: hidden; font-family: 'Cinzel', serif; font-weight: bold; box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
         .level-num { padding: 0.4rem 1rem; background: rgba(0,0,0,0.1); font-size: 1rem; }
         .level-name { padding: 0.4rem 1rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
-
         .wheel-title { font-family: 'Cinzel', serif; font-size: 2.2rem; margin: 0; color: var(--text-color); line-height: 1; letter-spacing: 1px; }
-
-        /* XP Bar - Refined */
         .xp-section-minimal { margin-bottom: 3rem; }
         .xp-bar-outer { background: rgba(0,0,0,0.1); height: 24px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(0,0,0,0.05); position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
         .xp-bar-inner { height: 100%; background: linear-gradient(90deg, #d4af37, #fef3c7, #d4af37); background-size: 200% 100%; animation: shimmer 3s infinite linear; box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); transition: width 0.8s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
-        .xp-bar-text { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            display: flex; align-items: center; justify-content: center; 
-            font-family: 'Cinzel', serif; font-size: 0.75rem; font-weight: bold; 
-            color: #1a1a1a; letter-spacing: 1.5px; z-index: 2;
-        }
-
-        .xp-alert-glow { 
-            margin-top: 1rem; text-align: center; font-size: 0.85rem; 
-            color: var(--gold-color); animation: pulse 2s infinite; 
-            font-weight: bold; letter-spacing: 2px; font-family: 'Cinzel', serif;
-        }
-
+        .xp-bar-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', serif; font-size: 0.75rem; font-weight: bold; color: #1a1a1a; letter-spacing: 1.5px; z-index: 2; }
+        .xp-alert-glow { margin-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--gold-color); animation: pulse 2s infinite; font-weight: bold; letter-spacing: 2px; font-family: 'Cinzel', serif; }
         .details-three-columns-grid { display: grid; grid-template-columns: 280px 1fr 300px; gap: 2rem; align-items: flex-start; }
-
-        /* Visual Column */
         .magical-wheel-chart-integrated { width: 100%; height: 280px; display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 1.5rem; }
         .magical-wheel-svg { width: 100%; height: 100%; }
         .wheel-segment { transition: all 0.5s ease; cursor: default; }
         .wheel-segment.active { filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.3)); }
         .trophy-icon { filter: drop-shadow(0 0 10px rgba(0,0,0,0.2)); pointer-events: none; }
-
         .info-box-integrated { padding: 0; }
         .wheel-description-text { font-family: 'Spectral', serif; font-size: 0.95rem; color: var(--text-secondary); font-style: italic; margin: 0.5rem 0 0 0; line-height: 1.5; }
-
-        /* Actions Column */
         .section-item-list { margin-bottom: 2.5rem; }
         .magical-header { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--text-color); margin: 0; }
         .magical-separator-section { border: 0; height: 1px; background-image: linear-gradient(to right, var(--gold-color), transparent); margin: 0.4rem 0 1.2rem 0; }
         
-        .items-vertical { display: flex; flex-direction: column; gap: 0.8rem; }
-        .item-card { 
-            background: var(--card-bg); border: 1px solid var(--border-color); 
-            padding: 0.8rem 1.2rem; border-radius: 0.8rem; 
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex; flex-direction: column; gap: 0.3rem;
+        /* Item Card V3 - Cleanest Edition */
+        .items-vertical { display: flex; flex-direction: column; gap: 0.6rem; }
+        .item-card-v3 { 
+            background: rgba(255, 255, 255, 0.5); /* Mais clara */
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 0.8rem; padding: 0.7rem 1.2rem;
+            transition: all 0.2s ease;
+            position: relative; overflow: hidden;
         }
-        .item-card:hover { transform: translateX(5px); border-color: var(--gold-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        
-        .item-card-header { display: flex; justify-content: space-between; align-items: center; }
-        .item-name { font-family: 'Cinzel', serif; font-size: 0.95rem; font-weight: 700; }
-        .item-badge { padding: 0.2rem 0.6rem; border-radius: 2rem; font-size: 0.75rem; font-weight: bold; font-family: 'Cinzel', serif; }
-        .item-badge.success { background: rgba(45,90,39,0.1); color: #2d5a27; }
-        .item-badge.danger { background: rgba(116,27,27,0.1); color: #741b1b; }
-        .item-badge.info { background: rgba(26,35,126,0.1); color: #1a237e; }
-        
-        .item-desc { font-family: 'Spectral', serif; font-size: 0.85rem; color: var(--text-secondary); margin: 0; line-height: 1.3; font-style: italic; opacity: 0.8; }
+        .item-card-v3.clickable:hover { transform: translateX(5px); background: rgba(255, 255, 255, 0.8); border-color: rgba(0,0,0,0.1); }
+        .item-card-v3.daily { border-left: 3px solid var(--gold-color); }
+        .item-card-v3.penalty { border-left: 3px solid #741b1b; }
+        .item-card-v3.quest { border-left: 3px solid #1a237e; }
+        .item-card-v3.done { border-left: 3px solid #2d5a27; opacity: 0.6; }
 
-        /* Challenges Column */
+        .card-v3-header-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+        .card-v3-title-group { display: flex; align-items: center; }
+        .card-v3-name-minimal { font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: 700; color: var(--text-color); letter-spacing: 0.3px; }
+        
+        .card-v3-meta-minimal { display: flex; align-items: center; gap: 0.6rem; }
+        .card-v3-xp-minimal { 
+            font-family: 'Cinzel', serif; font-size: 0.65rem; font-weight: bold; 
+            color: #2d5a27; opacity: 0.8; letter-spacing: 0.5px;
+        }
+        .card-v3-xp-minimal.danger { color: #741b1b; }
+        .card-v3-xp-minimal.info { color: #1a237e; }
+        
+        .card-v3-timer-minimal { 
+            font-family: 'Cinzel', serif; font-size: 0.65rem; color: #741b1b; 
+            font-weight: bold; background: rgba(116, 27, 27, 0.04); 
+            padding: 0.1rem 0.3rem; border-radius: 0.3rem;
+        }
+        .card-v3-status-minimal { font-family: 'Cinzel', serif; font-size: 0.65rem; font-weight: bold; color: #2d5a27; }
+
+        .card-v3-desc-subtitle { 
+            font-family: 'Spectral', serif; font-size: 0.75rem; color: var(--text-secondary); 
+            margin: 0.1rem 0 0 0; font-style: italic; opacity: 0.7; line-height: 1.2; 
+        }
+
+        /* Challenges List */
         .header-challenges-v2 { color: var(--accent-color); }
         .magical-separator-challenges { border: 0; height: 2px; background: linear-gradient(to right, transparent, var(--gold-color), transparent); margin: 0.6rem 0 1.5rem 0; opacity: 0.6; }
         .challenges-vertical-list { display: flex; flex-direction: column; gap: 1rem; }
         .challenge-card-v2 { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 1rem; border-radius: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem; transition: 0.3s; }
-        .challenge-card-v2.completed { border-color: #2d5a27; opacity: 0.6; }
+        .challenge-card-v2.completed { border-color: #741b1b; background: rgba(116, 27, 27, 0.05); opacity: 0.9; box-shadow: inset 0 0 10px rgba(116, 27, 27, 0.1); }
+        .challenge-card-v2.completed .challenge-v2-level { color: #741b1b; }
         .challenge-card-v2.unlocked { border-color: var(--gold-color); background: rgba(212,175,55,0.08); transform: scale(1.02); box-shadow: 0 0 15px rgba(212,175,55,0.2); }
         .challenge-card-v2.locked { opacity: 0.3; }
         .challenge-v2-header { display: flex; justify-content: space-between; align-items: center; }
         .challenge-v2-level { font-family: 'Cinzel', serif; font-size: 0.65rem; color: var(--gold-color); font-weight: bold; }
         .challenge-v2-name { font-weight: 700; font-size: 0.9rem; line-height: 1.2; }
         .challenge-v2-desc { font-family: 'Spectral', serif; font-size: 0.8rem; color: var(--text-secondary); margin: 0; line-height: 1.3; font-style: italic; opacity: 0.8; }
-
-        /* Modais & Edit */
-        .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-        .modal-content { background: var(--card-bg); border: 2px solid var(--gold-color); border-radius: 1.5rem; padding: 2rem; width: 90%; max-width: 450px; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
-        .modal-header-magic { text-align: center; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem; }
-        .modal-header-magic h2 { font-family: 'Cinzel', serif; font-size: 1.5rem; color: var(--gold-color); margin: 0; text-shadow: 0 0 10px rgba(212,175,55,0.3); }
-        .modal-magic-actions { display: flex; gap: 1rem; margin-top: 2rem; justify-content: center; }
-        .btn-magic-primary, .btn-magic-danger, .btn-magic-secondary { padding: 0.8rem 1.8rem; font-family: 'Cinzel', serif; font-weight: 700; cursor: pointer; border-radius: 0.5rem; transition: 0.2s; }
-        .btn-magic-primary { background: var(--accent-color); color: #fff; border: 1px solid var(--gold-color); }
-        .btn-magic-danger { background: #741b1b; color: #fff; border: 1px solid var(--gold-color); }
-        .btn-magic-secondary { background: transparent; color: var(--text-color); border: 1px solid var(--border-color); }
-        .btn-magic-primary:hover, .btn-magic-danger:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-
+        
         .edit-input-title { font-family: 'Cinzel', serif; font-size: 2.2rem; background: rgba(255,255,255,0.05); border: 1px solid var(--gold-color); color: var(--text-color); width: 100%; border-radius: 0.5rem; padding: 0.2rem 0.5rem; outline: none; }
         .edit-textarea-integrated { font-family: 'Spectral', serif; font-size: 0.95rem; width: 100%; min-height: 100px; background: rgba(0,0,0,0.03); border: 1px solid var(--gold-color); color: var(--text-color); border-radius: 0.5rem; padding: 0.8rem; outline: none; }
-
         .danger-zone-footer { margin-top: 4rem; padding-bottom: 3rem; }
         .magical-separator { border: 0; height: 1px; background-image: linear-gradient(to right, transparent, var(--border-color), transparent); margin-bottom: 1.5rem; }
         .footer-actions { display: flex; justify-content: flex-end; gap: 1rem; }
         .btn-danger, .btn-warning { color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 0.5rem; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: 0.2s; }
         .btn-danger { background: #741b1b; }
         .btn-warning { background: #b18e3a; }
-        .btn-danger:hover { background: #a52a2a; }
-        .btn-warning:hover { background: #d4af37; }
-
         @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
         @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; text-shadow: 0 0 15px var(--gold-color); } 100% { transform: scale(1); opacity: 0.8; } }
-        
         .clickable { cursor: pointer; }
         @media (max-width: 1200px) { .details-three-columns-grid { grid-template-columns: 1fr; } }
     </style>
