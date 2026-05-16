@@ -449,6 +449,13 @@
         }
     </script>
 
+    <!-- Ambient Magical Dust (Randomly positioned) -->
+    <div class="magical-dust-overlay" style="position: absolute; inset: 0; pointer-events: none; overflow: hidden;">
+        @for($m = 0; $m < 15; $m++)
+            <div class="magical-dust" style="--x: {{ rand(0, 100) }}vw; --x2: {{ rand(0, 100) }}vw; --d: {{ rand(10, 25) }}s; left: 0; top: 0;"></div>
+        @endfor
+    </div>
+
     <style>
         :root {
             --segment-inactive: rgba(0, 0, 0, 0.03);
@@ -464,7 +471,7 @@
             --bg-penalty: rgba(116, 27, 27, 0.08);
             --bg-quest: rgba(26, 35, 126, 0.08);
             
-            --page-bg-final: var(--bg-color); /* Uniform parchment matching the header */
+            --page-bg-final: var(--card-bg); /* Uniform lighter parchment */
         }
 
         [data-theme="dark"] {
@@ -490,6 +497,31 @@
             background: var(--page-bg-final) !important;
             min-height: calc(100vh - 60px);
             position: relative;
+            overflow: hidden; /* For floating motes */
+            animation: pageEntryReveal 1.2s ease-out;
+        }
+
+        @keyframes pageEntryReveal {
+            from { opacity: 0; transform: translateY(10px); filter: blur(5px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+
+        /* Dust Motes / Magical Sparks */
+        .magical-dust {
+            position: absolute;
+            width: 4px; height: 4px;
+            background: var(--gold-color);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0.15;
+            filter: blur(1px);
+            animation: floatMote var(--d) infinite linear;
+            z-index: 0;
+        }
+        @keyframes floatMote {
+            0% { transform: translate(var(--x), 110vh) scale(0); opacity: 0; }
+            50% { opacity: 0.2; }
+            100% { transform: translate(var(--x2), -10vh) scale(1.5); opacity: 0; }
         }
 
         .marauders-intro-overlay {
@@ -554,7 +586,19 @@
         .level-badge-pill { background: var(--gold-color); color: #000; display: flex; align-items: center; border-radius: 2rem; overflow: hidden; font-family: 'Cinzel', serif; font-weight: bold; box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
         .level-num { padding: 0.4rem 1rem; background: rgba(0,0,0,0.1); font-size: 1rem; }
         .level-name { padding: 0.4rem 1rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
-        .wheel-title { font-family: 'Cinzel', serif; font-size: 2.2rem; margin: 0; color: var(--text-color); line-height: 1; letter-spacing: 1px; }
+        .wheel-title { 
+            font-family: 'Cinzel', serif; 
+            font-size: 2.2rem; 
+            margin: 0; 
+            color: var(--text-color); 
+            line-height: 1; 
+            letter-spacing: 1px;
+            animation: titlePulse 4s infinite ease-in-out;
+        }
+        @keyframes titlePulse {
+            0%, 100% { text-shadow: 0 0 5px transparent; }
+            50% { text-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
+        }
         .xp-section-minimal { margin-bottom: 3rem; }
         .xp-bar-outer { background: rgba(0,0,0,0.1); height: 24px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
         .xp-bar-inner { height: 100%; background: linear-gradient(90deg, #d4af37, #fef3c7, #d4af37); background-size: 200% 100%; animation: shimmer 3s infinite linear; box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); transition: width 0.8s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
@@ -588,7 +632,15 @@
         .item-card-v3.penalty { border-left: 3px solid #741b1b; background: var(--bg-penalty); }
         .item-card-v3.quest { border-left: 3px solid #1a237e; background: var(--bg-quest); }
         .item-card-v3.done { border-left: 3px solid #2d5a27; opacity: 0.6; background: rgba(0,0,0,0.05); }
-        .item-card-v3.clickable:hover { transform: translateX(5px); filter: brightness(1.1); }
+        .item-card-v3.clickable:hover { 
+            transform: translateX(5px) scale(1.02); 
+            filter: brightness(1.1); 
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.2), 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        .item-card-v3.penalty.clickable:hover { 
+            box-shadow: 0 0 20px rgba(116, 27, 27, 0.2), 0 5px 15px rgba(0,0,0,0.1);
+        }
         .card-v3-header-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
         .card-v3-title-group { display: flex; align-items: center; gap: 0.6rem; }
         .card-v3-name-minimal { font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: 700; color: var(--text-color); letter-spacing: 0.3px; }
