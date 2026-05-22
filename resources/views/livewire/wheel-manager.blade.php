@@ -27,9 +27,12 @@
         </div>
 
         @if (session()->has('message'))
-            <div class="alert-magical">
-                <span class="alert-spark">✨</span>
-                {{ session('message') }}
+            <div class="alert-toast-magical" x-data="{ show: true }" x-init="setTimeout(() => show = false, 4000)" x-show="show" x-transition>
+                <div class="toast-content">
+                    <span class="toast-icon">✨</span>
+                    <span class="toast-message">{{ session('message') }}</span>
+                </div>
+                <button @click="show = false" class="toast-close">✕</button>
             </div>
         @endif
 
@@ -300,8 +303,83 @@
         .meta-value { font-family: 'Cinzel', serif; font-size: 0.95rem; font-weight: 900; color: var(--ink-color); }
         .meta-divider { width: 1px; height: 18px; background: rgba(0,0,0,0.08); }
 
-        .alert-magical {
-            background: rgba(45, 90, 39, 0.08); border: 1px solid rgba(45, 90, 39, 0.2); color: #2d5a27; padding: 0.8rem 1.5rem; border-radius: 2rem; margin-bottom: 2rem; font-family: 'Cinzel', serif; font-size: 0.85rem; text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        /* Alert Toast */
+        .alert-toast-magical,
+        .alert-toast-error {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            padding: 0.8rem 1.2rem;
+            border-radius: 0.8rem;
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            z-index: 3000;
+            animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: calc(100vw - 3rem);
+            width: 350px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .alert-toast-magical {
+            background: linear-gradient(135deg, #fcf8ed, #f5ecd5);
+            border: 2px solid var(--gold-color);
+            color: var(--ink-color);
+        }
+
+        .alert-toast-error {
+            background: linear-gradient(135deg, #fcf8ed, #fee2e2);
+            border: 2px solid #dc2626;
+            color: var(--ink-color);
+        }
+
+        .toast-content {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex: 1;
+        }
+
+        .toast-icon {
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .toast-message {
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-align: left;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--ink-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.2rem 0.4rem;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .toast-close:hover {
+            opacity: 1;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         .empty-state-mystic { text-align: center; padding: 4rem 2rem; grid-column: 1/-1; background: var(--parchment-light); border-radius: 2rem; border: 1px dashed var(--border-color); }

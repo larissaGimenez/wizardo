@@ -24,6 +24,7 @@ class SpellManager extends Component
     public $isEditing = false;
     public $showModal = false;
     public $filter_wheel_id;
+    public $spellToDelete = null;
 
     protected $rules = [
         'wheel_id' => 'required|exists:wheels,id',
@@ -122,6 +123,7 @@ class SpellManager extends Component
     public function delete($id)
     {
         Spell::findOrFail($id)->delete();
+        $this->spellToDelete = null;
         session()->flash('message', 'Feitiço excluído com sucesso!');
     }
 
