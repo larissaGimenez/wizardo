@@ -15,7 +15,7 @@ return new class extends Migration
             $create->id();
             $create->foreignId('wheel_id')->constrained()->onDelete('cascade');
             $create->foreignId('spell_id')->constrained()->onDelete('cascade');
-            $create->date('last_completed_at'); // Only need the date part
+            $create->date('last_completed_at')->nullable(); // Only need the date part
             $create->date('last_penalty_applied_at')->nullable();
             $create->timestamps();
 

@@ -57,9 +57,19 @@ class WheelDetails extends Component
                 ->orderBy('created_at', 'desc')
                 ->first();
 
-            $startDate = $lastActivity 
-                ? Carbon::parse(max($lastActivity->last_completed_at, $lastActivity->last_penalty_applied_at))
-                : $this->wheel->created_at->startOfDay();
+            if ($lastActivity) {
+                $completed = $lastActivity->last_completed_at;
+                $penalty = $lastActivity->last_penalty_applied_at;
+
+                if ($completed && $penalty) {
+                    $startDate = $completed->greaterThan($penalty) ? $completed : $penalty;
+                } else {
+                    $startDate = $completed ?? $penalty;
+                }
+                $startDate = Carbon::parse($startDate);
+            } else {
+                $startDate = $this->wheel->created_at->startOfDay();
+            }
 
             $yesterday = Carbon::yesterday();
 

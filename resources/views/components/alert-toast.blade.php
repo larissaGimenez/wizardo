@@ -1,5 +1,5 @@
 @if (session()->has('message'))
-    <div class="alert-toast-magical" x-data="{ show: true }" x-init="setTimeout(() => show = false, 4000)" x-show="show" x-transition>
+    <div class="alert-toast-magical" x-data="{ show: true }" x-init="setTimeout(() => show = false, 10000)" x-show="show" x-transition>
         <div class="toast-content">
             <span class="toast-icon">✨</span>
             <span class="toast-message">{{ session('message') }}</span>
@@ -9,7 +9,7 @@
 @endif
 
 @if (session()->has('error'))
-    <div class="alert-toast-error" x-data="{ show: true }" x-init="setTimeout(() => show = false, 4000)" x-show="show" x-transition>
+    <div class="alert-toast-error" x-data="{ show: true }" x-init="setTimeout(() => show = false, 10000)" x-show="show" x-transition>
         <div class="toast-content">
             <span class="toast-icon">⚡</span>
             <span class="toast-message">{{ session('error') }}</span>

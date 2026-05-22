@@ -120,7 +120,7 @@
         <!-- Paginação -->
         @if($challenges->hasPages())
             <div class="pagination-container-mystic">
-                {{ $challenges->links() }}
+                {{ $challenges->links('livewire.mystic-pagination') }}
             </div>
         @endif
 
@@ -228,6 +228,14 @@
         }
 
         /* Mystic Parchment Modal Styles */
+        .modal-form-full {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
         .modal-backdrop-mystic.full-screen-modal {
             position: fixed;
             inset: 0;
@@ -746,40 +754,12 @@
 
         /* Pagination */
         .pagination-container-mystic {
-            margin-top: 2rem;
+            margin-top: 3rem;
             display: flex;
             justify-content: center;
             position: relative;
             z-index: 5;
-        }
-
-        .pagination-container-mystic nav {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .pagination-container-mystic span, .pagination-container-mystic a {
-            padding: 0.5rem 0.75rem;
-            border: 1px solid rgba(44, 24, 16, 0.15);
-            border-radius: 0.375rem;
-            background: var(--parchment-light);
-            color: var(--ink-color);
-            text-decoration: none;
-            font-size: 0.875rem;
-            font-family: 'Cinzel', serif;
-            transition: 0.2s;
-        }
-
-        .pagination-container-mystic .active {
-            background-color: var(--gold-color);
-            color: white;
-            border-color: var(--gold-color);
-            font-weight: 600;
-        }
-
-        .pagination-container-mystic a:hover {
-            background-color: var(--parchment-glow);
-            border-color: var(--gold-color);
+            width: 100%;
         }
 
         /* Modal */

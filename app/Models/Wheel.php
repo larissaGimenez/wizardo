@@ -59,7 +59,8 @@ class Wheel extends Model
      */
     public function getLevelTitleAttribute()
     {
-        $titleRecord = $this->levelTitles()->where('level', $this->level)->first();
+        $level = min(10, $this->level + 1);
+        $titleRecord = $this->levelTitles()->where('level', $level)->first();
         return $titleRecord ? $titleRecord->title : 'Iniciante';
     }
 

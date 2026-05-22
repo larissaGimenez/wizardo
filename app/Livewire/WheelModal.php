@@ -23,7 +23,7 @@ class WheelModal extends Component
 
     // Step 2: Spells
     public $selected_spells = [];
-    public $new_spell_name, $new_spell_action, $new_spell_gain, $new_spell_damage, $new_spell_type = 'Gain';
+    public $new_spell_name, $new_spell_action, $new_spell_gain, $new_spell_damage, $new_spell_type = 'feitiço diário';
 
     // Step 3: Quests
     public $selected_quests = [];
@@ -129,7 +129,7 @@ class WheelModal extends Component
         $this->new_spell_action = '';
         $this->new_spell_gain = '';
         $this->new_spell_damage = '';
-        $this->new_spell_type = 'Gain';
+        $this->new_spell_type = 'feitiço diário';
     }
 
     public function createQuest()
@@ -261,7 +261,7 @@ class WheelModal extends Component
         $this->selected_quests = [];
         $this->selected_challenges = [];
         
-        $this->new_spell_name = ''; $this->new_spell_action = ''; $this->new_spell_gain = ''; $this->new_spell_damage = ''; $this->new_spell_type = 'Gain';
+        $this->new_spell_name = ''; $this->new_spell_action = ''; $this->new_spell_gain = ''; $this->new_spell_damage = ''; $this->new_spell_type = 'feitiço diário';
         $this->new_quest_name = ''; $this->new_quest_description = ''; $this->new_quest_gain = '';
         $this->new_challenge_name = ''; $this->new_challenge_description = ''; $this->new_challenge_level = 1; $this->new_challenge_prize_name = ''; $this->new_challenge_prize_description = '';
 

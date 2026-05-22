@@ -100,8 +100,8 @@
                                                 <input type="text" wire:model="new_spell_name" class="input-parchment input-xs" placeholder="Feitiço">
                                                 <input type="text" wire:model="new_spell_action" class="input-parchment input-xs" placeholder="Ação bruxa (descrição)">
                                                 <select wire:model="new_spell_type" class="input-parchment input-xs">
-                                                    <option value="Gain">Feitiço diário</option>
-                                                    <option value="Damage">Penalidade das trevas</option>
+                                                    <option value="feitiço diário">Feitiço diário</option>
+                                                    <option value="penalidade das trevas">Penalidade das trevas</option>
                                                 </select>
                                                 <div class="flex-row gap-sm">
                                                     <input type="number" wire:model="new_spell_gain" class="input-parchment input-xs" placeholder="Ganho">
