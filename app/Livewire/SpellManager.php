@@ -40,6 +40,13 @@ class SpellManager extends Component
         $this->resetPage();
     }
 
+    public function updatedType($value)
+    {
+        if ($value === 'penalidade das trevas') {
+            $this->gain = 0;
+        }
+    }
+
     public function openModal()
     {
         $this->resetForm();
@@ -54,6 +61,10 @@ class SpellManager extends Component
 
     public function save()
     {
+        if ($this->type === 'penalidade das trevas') {
+            $this->gain = 0;
+        }
+
         $this->validate([
             'wheel_id' => 'nullable|exists:wheels,id',
             'name' => 'required|string|max:255|unique:spells,name,' . $this->editingSpellId,

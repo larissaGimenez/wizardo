@@ -93,15 +93,22 @@
                         <p class="spell-action-organic">{{ Illuminate\Support\Str::limit($spell->action, 80) ?? 'Sem ação definida.' }}</p>
 
                         <div class="spell-stats-organic">
-                            <div class="stat-item">
-                                <span class="stat-label">Ganho</span>
-                                <span class="stat-value">⬆️ {{ $spell->gain }}</span>
-                            </div>
-                            <div class="stat-divider"></div>
-                            <div class="stat-item">
-                                <span class="stat-label">Dano</span>
-                                <span class="stat-value">💥 {{ $spell->damage }}</span>
-                            </div>
+                            @if($spell->type === 'penalidade das trevas')
+                                <div class="stat-item">
+                                    <span class="stat-label">Dano</span>
+                                    <span class="stat-value damage-highlight">{{ $spell->damage }}</span>
+                                </div>
+                            @else
+                                <div class="stat-item">
+                                    <span class="stat-label">Ganho</span>
+                                    <span class="stat-value">{{ $spell->gain }}</span>
+                                </div>
+                                <div class="stat-divider"></div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Dano</span>
+                                    <span class="stat-value damage-highlight">{{ $spell->damage }}</span>
+                                </div>
+                            @endif
                         </div>
 
                         <div class="wheel-association">
@@ -147,87 +154,105 @@
 
         <!-- Modal de Cadastro/Edição -->
         @if($showModal)
-        <div class="modal-backdrop" wire:click="closeModal">
-            <div class="modal-content" wire:click.stop>
-                <div class="modal-header">
-                    <h2>{{ $isEditing ? 'Editar Feitiço' : 'Cadastrar Novo Feitiço' }}</h2>
-                    <button wire:click="closeModal" class="close-btn">&times;</button>
+        @teleport('body')
+        <div class="modal-backdrop-mystic full-screen-modal" wire:click="closeModal">
+            <div class="modal-parchment-spell" wire:click.stop>
+                <div class="parchment-texture"></div>
+                <div class="modal-header-mystic">
+                    <div class="header-content-wrapper">
+                        <h2>{{ $isEditing ? 'Reescrever Feitiço' : 'Conjurar Novo Feitiço' }}</h2>
+                    </div>
+                    <button wire:click="closeModal" class="close-btn-mystic">✕</button>
                 </div>
-                <div class="modal-body">
-                    <form wire:submit.prevent="save">
-                        <div class="form-group">
+                <form wire:submit.prevent="save" class="modal-form-full">
+                    <div class="modal-body-mystic scrollable-content">
+                        
+                        <div class="form-group-parchment">
                             <label for="wheel_id">Pertence à Roda</label>
-                            <select id="wheel_id" wire:model="wheel_id">
+                            <select id="wheel_id" wire:model="wheel_id" class="input-parchment">
                                 <option value="">Sem Roda (Desassociar)</option>
                                 @foreach($wheels as $wheel)
                                     <option value="{{ $wheel->id }}">{{ $wheel->name }}</option>
                                 @endforeach
                             </select>
-                            @error('wheel_id') <span class="error">{{ $message }}</span> @enderror
+                            @error('wheel_id') <span class="error-magical">{{ $message }}</span> @enderror
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group-parchment">
                             <label for="spell_type">Tipo de Feitiço</label>
-                            <select id="spell_type" wire:model="type">
+                            <select id="spell_type" wire:model.live="type" class="input-parchment">
                                 <option value="">Selecione um tipo</option>
                                 <option value="feitiço diário">Feitiço Diário</option>
                                 <option value="penalidade das trevas">Penalidade das Trevas</option>
                             </select>
-                            @error('type') <span class="error">{{ $message }}</span> @enderror
+                            @error('type') <span class="error-magical">{{ $message }}</span> @enderror
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group-parchment">
                             <label for="spell_name">Nome do Feitiço</label>
-                            <input type="text" id="spell_name" wire:model="name" placeholder="Ex: Bola de Fogo">
-                            @error('name') <span class="error">{{ $message }}</span> @enderror
+                            <input type="text" id="spell_name" wire:model="name" class="input-parchment" placeholder="Ex: Bola de Fogo">
+                            @error('name') <span class="error-magical">{{ $message }}</span> @enderror
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group-parchment">
                             <label for="spell_action">Ação (Descrição)</label>
-                            <textarea id="spell_action" wire:model="action" placeholder="O que o feitiço faz..."></textarea>
-                            @error('action') <span class="error">{{ $message }}</span> @enderror
+                            <textarea id="spell_action" wire:model="action" class="input-parchment textarea-compact" placeholder="O que o feitiço faz..."></textarea>
+                            @error('action') <span class="error-magical">{{ $message }}</span> @enderror
                         </div>
 
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="spell_gain">Ganho</label>
-                                <input type="number" id="spell_gain" wire:model="gain" placeholder="0">
-                                @error('gain') <span class="error">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="form-group">
+                        @if($type === 'penalidade das trevas')
+                            <div class="form-group-parchment">
                                 <label for="spell_damage">Dano</label>
-                                <input type="number" id="spell_damage" wire:model="damage" placeholder="0">
-                                @error('damage') <span class="error">{{ $message }}</span> @enderror
+                                <input type="number" id="spell_damage" wire:model="damage" class="input-parchment" placeholder="0">
+                                @error('damage') <span class="error-magical">{{ $message }}</span> @enderror
                             </div>
-                        </div>
+                        @else
+                            <div class="form-row">
+                                <div class="form-group-parchment">
+                                    <label for="spell_gain">Ganho</label>
+                                    <input type="number" id="spell_gain" wire:model="gain" class="input-parchment" placeholder="0">
+                                    @error('gain') <span class="error-magical">{{ $message }}</span> @enderror
+                                </div>
+
+                                <div class="form-group-parchment">
+                                    <label for="spell_damage">Dano</label>
+                                    <input type="number" id="spell_damage" wire:model="damage" class="input-parchment" placeholder="0">
+                                    @error('damage') <span class="error-magical">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        @endif
 
                         <!-- Upload de Imagem -->
-                        <div class="form-group">
+                        <div class="form-group-parchment">
                             <label for="spell_image">Imagem do Feitiço</label>
-                            <input type="file" id="spell_image" wire:model="image" accept="image/*">
+                            <input type="file" id="spell_image" wire:model="image" accept="image/*" class="input-parchment" style="border: none; padding: 0.5rem 0;">
                             <div wire:loading wire:target="image" class="loading-text">Carregando imagem...</div>
-                            @error('image') <span class="error">{{ $message }}</span> @enderror
+                            @error('image') <span class="error-magical">{{ $message }}</span> @enderror
                             
                             <!-- Preview -->
                             @if ($image)
                                 <div class="image-preview mt-2">
-                                    <img src="{{ $image->temporaryUrl() }}" style="max-width: 100px; border-radius: 0.5rem;">
+                                    <img src="{{ $image->temporaryUrl() }}" style="max-width: 100px; border-radius: 0.5rem; border: 1px solid rgba(44, 24, 16, 0.1);">
                                 </div>
                             @endif
                         </div>
 
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">
-                                {{ $isEditing ? 'Atualizar' : 'Cadastrar' }}
-                            </button>
-                            <button type="button" wire:click="closeModal" class="btn btn-secondary">Cancelar</button>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+                    
+                    <div class="modal-footer-mystic compact-footer">
+                        <button type="button" wire:click="closeModal" class="btn-cancel-mystic">CANCELAR</button>
+                        <button type="submit" class="btn-magical-seal">
+                            <div class="seal-glow"></div>
+                            <div class="seal-inner">
+                                <span class="seal-text">{{ $isEditing ? 'SALVAR ALTERAÇÕES' : 'CONJURAR FEITIÇO' }}</span>
+                            </div>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
-    @endif
+        @endteleport
+        @endif
 </div>
 
     <style>
@@ -236,6 +261,186 @@
             --ink-color: #2c1810;
             --parchment-light: rgba(252, 248, 237, 0.4);
             --parchment-glow: rgba(252, 248, 237, 0.9);
+            --page-bg-final: var(--bg-color);
+        }
+
+        /* Damage Highlight Red */
+        .damage-highlight {
+            color: #dc2626 !important;
+        }
+
+        /* Mystic Parchment Modal Styles */
+        .modal-backdrop-mystic.full-screen-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            padding: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-parchment-spell {
+            background: #f4ece0;
+            width: 90vw;
+            max-width: 600px;
+            max-height: 90vh;
+            border-radius: 12px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            animation: modalFadeIn 0.5s ease-out;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .parchment-texture {
+            position: absolute;
+            inset: 0;
+            background-image: url('https://www.transparenttextures.com/patterns/old-map.png');
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .modal-header-mystic {
+            padding: 1.5rem 2rem;
+            background: rgba(210, 180, 140, 0.1);
+            border-bottom: 2px solid var(--gold-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-content-wrapper { display: flex; align-items: center; gap: 1rem; }
+        .modal-header-mystic h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            color: var(--ink-color);
+            margin: 0;
+            letter-spacing: 3px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .close-btn-mystic {
+            position: absolute;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--ink-color);
+            opacity: 0.5;
+            transition: 0.3s;
+        }
+        .close-btn-mystic:hover {
+            opacity: 1;
+            color: #8b0000;
+        }
+
+        .modal-body-mystic.scrollable-content {
+            padding: 2rem 3rem;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .modal-footer-mystic.compact-footer {
+            padding: 1.5rem 3rem;
+            background: rgba(210, 180, 140, 0.1);
+            border-top: 1px dashed rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .btn-cancel-mystic {
+            background: none;
+            border: none;
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            color: #8b0000;
+            opacity: 0.6;
+            transition: 0.3s;
+        }
+        .btn-cancel-mystic:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .form-group-parchment {
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 15;
+            text-align: left;
+        }
+        .form-group-parchment label {
+            display: block;
+            font-family: 'Cinzel', serif;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-bottom: 0.4rem;
+            color: var(--ink-color);
+            text-transform: uppercase;
+        }
+        
+        .input-parchment {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(0,0,0,0.15);
+            padding: 0.6rem 0;
+            font-family: 'Spectral', serif;
+            font-size: 1rem;
+            color: var(--ink-color);
+            transition: 0.3s;
+            box-sizing: border-box;
+        }
+        .input-parchment:focus {
+            outline: none;
+            border-bottom-color: var(--gold-color);
+        }
+        
+        select.input-parchment {
+            border-radius: 0;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg fill='%232c1810' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1.2rem;
+            padding-right: 2rem;
+            cursor: pointer;
+        }
+
+        .textarea-compact {
+            resize: none;
+            min-height: 80px;
+            line-height: 1.5;
+        }
+
+        .error-magical {
+            color: #8b0000;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-top: 0.2rem;
+            display: block;
         }
 
         .integrated-page-container {

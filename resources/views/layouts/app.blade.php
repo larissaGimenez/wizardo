@@ -124,6 +124,18 @@
             box-shadow: inset 4px 0 0 var(--accent-color);
         }
 
+        .nav-item .icon svg {
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+
+        .nav-item:hover .icon svg {
+            transform: scale(1.18) rotate(8deg);
+        }
+
+        .nav-item.active .icon svg {
+            transform: scale(1.1);
+        }
+
         .main-content {
             background-color: var(--bg-color);
         }
@@ -352,37 +364,82 @@
             <ul class="nav-links">
                 <li>
                     <a href="{{ route('welcome') }}" class="nav-item {{ request()->routeIs('welcome') ? 'active' : '' }}">
-                        <span class="icon">📊</span>
+                        <span class="icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; transition: transform 0.3s ease;">
+                                <path d="M2 7h6a4 4 0 0 1 4 4v10a3 3 0 0 0-3-3H2z" />
+                                <path d="M22 7h-6a4 4 0 0 0-4 4v10a3 3 0 0 1 3-3h7z" />
+                                <path d="M12 2 L13.5 4.5 L16 6 L13.5 7.5 L12 10 L10.5 7.5 L8 6 L10.5 4.5 Z" />
+                            </svg>
+                        </span>
                         <span class="label">Dashboard</span>
                     </a>
                 </li>
                 <li>
                     <a href="{{ route('wheel.manager') }}" class="nav-item {{ request()->routeIs('wheel.manager') ? 'active' : '' }}">
-                        <span class="icon">🎡</span>
+                        <span class="icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; transition: transform 0.3s ease;">
+                                <circle cx="12" cy="12" r="9" />
+                                <circle cx="12" cy="12" r="2" />
+                                <line x1="12" y1="3" x2="12" y2="10" />
+                                <line x1="12" y1="14" x2="12" y2="21" />
+                                <line x1="3" y1="12" x2="10" y2="12" />
+                                <line x1="14" y1="12" x2="21" y2="12" />
+                                <line x1="5.64" y1="5.64" x2="10.59" y2="10.59" />
+                                <line x1="13.41" y1="13.41" x2="18.36" y2="18.36" />
+                                <line x1="18.36" y1="5.64" x2="13.41" y2="10.59" />
+                                <line x1="10.59" y1="13.41" x2="5.64" y2="18.36" />
+                            </svg>
+                        </span>
                         <span class="label">Rodas</span>
                     </a>
                 </li>
                 <li>
                     <a href="{{ route('spell.manager') }}" class="nav-item {{ request()->routeIs('spell.manager') ? 'active' : '' }}">
-                        <span class="icon">✨</span>
+                        <span class="icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; transition: transform 0.3s ease;">
+                                <path d="M18.5 5.5L5.5 18.5" />
+                                <path d="M15 4l.5 1.5L17 6l-1.5.5L15 8l-.5-1.5L13 6l1.5-.5z" />
+                                <path d="M9 2l.3.7.7.3-.7.3-.3.7-.3-.7-.7-.3.7-.3z" />
+                                <path d="M20 13l.3.7.7.3-.7.3-.3.7-.3-.7-.7-.3.7-.3z" />
+                            </svg>
+                        </span>
                         <span class="label">Feitiços</span>
                     </a>
                 </li>
                 <li>
                     <a href="{{ route('quest.manager') }}" class="nav-item {{ request()->routeIs('quest.manager') ? 'active' : '' }}">
-                        <span class="icon">📜</span>
+                        <span class="icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; transition: transform 0.3s ease;">
+                                <path d="M4 16v-2.38C4 11.5 5.88 9.85 6 7.07l.08-1.57A1.66 1.66 0 0 1 7.72 4h.3a1.66 1.66 0 0 1 1.62 1.5l.08 1.57c.12 2.78 2 4.43 2 6.55V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
+                                <path d="M12 11.5v-2.38c0-2.12 1.88-3.77 2-6.55l.08-1.57A1.66 1.66 0 0 1 15.72 1h.3a1.66 1.66 0 0 1 1.62 1.5l.08 1.57c.12 2.78 2 4.43 2 6.55V11.5a2 2 0 0 1-2 2h-3.7a2 2 0 0 1-2-2z" />
+                            </svg>
+                        </span>
                         <span class="label">Missões</span>
                     </a>
                 </li>
                 <li>
                     <a href="{{ route('challenge.manager') }}" class="nav-item {{ request()->routeIs('challenge.manager') ? 'active' : '' }}">
-                        <span class="icon">🏆</span>
+                        <span class="icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; transition: transform 0.3s ease;">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                <circle cx="12" cy="11" r="3" />
+                                <path d="M12 8v6" />
+                                <path d="M10 11h4" />
+                            </svg>
+                        </span>
                         <span class="label">Desafios</span>
                     </a>
                 </li>
                 <li>
                     <a href="#" class="nav-item">
-                        <span class="icon">⚙️</span>
+                        <span class="icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; transition: transform 0.3s ease;">
+                                <circle cx="8" cy="12" r="4" />
+                                <path d="M12 12h8" />
+                                <path d="M18 12v3M20 12v3" />
+                                <path d="M8 10v4M6 12h4" />
+                            </svg>
+                        </span>
                         <span class="label">Configurações</span>
                     </a>
                 </li>
